@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useFirebaseUpload } from '../../hooks/useFirebaseUpload';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTranslation } from '../../hooks/useTranslation';
+import { useFirebaseUpload } from '../../../hooks/useFirebaseUpload';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { Button } from './Button';
 
 interface FileUploadWithProgressProps {

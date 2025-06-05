@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './Button';
-import { useOfflineStatus } from '../../hooks/useOfflineStatus';
+import { useOfflineStatus } from '../../../hooks/useOfflineStatus';
 
 interface OfflineAwareButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'light' | 'link';

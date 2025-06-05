@@ -1,6 +1,6 @@
 import React from 'react';
-import { useOfflineStatus } from '../../hooks/useOfflineStatus';
-import { useTranslation } from '../../hooks/useTranslation';
+import { useOfflineStatus } from '../../../hooks/useOfflineStatus';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 export const OfflineIndicator: React.FC = () => {
   const isOffline = useOfflineStatus();

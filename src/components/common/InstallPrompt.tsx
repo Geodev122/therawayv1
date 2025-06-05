@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../../../components/common/Button';
-import { useTranslation } from '../../hooks/useTranslation';
+import { Button } from './Button';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 export const InstallPrompt: React.FC = () => {
   const { t } = useTranslation();
