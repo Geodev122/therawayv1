@@ -7,7 +7,7 @@ import { useTranslation } from './hooks/useTranslation';
 import { Navbar } from './components/Navbar';
 import { LoginPromptModal } from './components/auth/LoginPromptModal';
 import { OfflineNotification } from './src/components/common/OfflineNotification';
-import { InstallPrompt } from './components/common/InstallPrompt';
+import { InstallPrompt } from './src/components/common/InstallPrompt';
 import { UserRole } from './types';
 import { registerServiceWorker, setupOfflineDetection } from './src/pwa';
 
