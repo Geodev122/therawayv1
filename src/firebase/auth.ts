@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from './config';
-import { User, UserRole } from '../types';
+import { User, UserRole } from '../../types';
 
 // Sign up a new user
 export const signUp = async (
