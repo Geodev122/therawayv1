@@ -1,4 +1,4 @@
-const CACHE_NAME = 'theraway-v1.1-app'; // Increment version and mark for /app deployment
+const CACHE_NAME = 'theraway-v1.2-app'; // Increment version and mark for /app deployment
 const APP_SHELL_FILES = [
   '/app/',
   '/app/index.html',
