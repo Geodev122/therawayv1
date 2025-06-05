@@ -1,6 +1,6 @@
 import React from 'react';
-import { useTranslation } from '../../../hooks/useTranslation';
-import { useOfflineStatus } from '../../../hooks/useOfflineStatus';
+import { useTranslation } from '../hooks/useTranslation.ts';
+import { useOfflineStatus } from '../hooks/useOfflineStatus.ts';
 
 interface DataSyncStatusProps {
   lastSyncTime?: Date | null;
