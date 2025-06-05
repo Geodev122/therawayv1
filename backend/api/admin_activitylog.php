@@ -10,6 +10,7 @@ try { // Global try-catch block to handle any unhandled errors
     require_once __DIR__ . '/../config/core.php';
     require_once __DIR__ . '/../config/db.php'; // Provides $pdo
     require_once __DIR__ . '/../vendor/autoload.php'; // Composer autoloader
+    require_once __DIR__ . '/../core/helpers.php'; // For authenticateAdmin helper
 
     use Firebase\JWT\JWT;
     use Firebase\JWT\Key;
@@ -29,48 +30,9 @@ try { // Global try-catch block to handle any unhandled errors
         sendJsonResponse(['status' => 'error', 'message' => 'Server configuration error (JWT).'], 500);
     }
 
-    /**
-     * Authenticates an admin user from JWT.
-     * Sends error response and exits if authentication fails.
-     * @param string $jwtKey The JWT secret key.
-     * @return array Decoded JWT payload containing admin user data.
-     */
-    function authenticateAdmin(string $jwtKey): array {
-        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
-        }
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        list($type, $token) = explode(' ', $authHeader, 2);
-
-        if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token type or token is empty.'], 401);
-        }
-
-        try {
-            $decoded = JWT::decode($token, new Key($jwtKey, 'HS256'));
-            if (!isset($decoded->data) || !isset($decoded->data->role) || $decoded->data->role !== 'ADMIN' || !isset($decoded->data->userId)) {
-                sendJsonResponse(['status' => 'error', 'message' => 'Access denied. Admin role required.'], 403);
-            }
-            // Add admin's name to the returned data if available in token
-            $adminName = isset($decoded->data->name) ? $decoded->data->name : 'Admin User';
-            return ['userId' => $decoded->data->userId, 'role' => $decoded->data->role, 'name' => $adminName];
-        } catch (ExpiredException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token has expired.'], 401);
-        } catch (SignatureInvalidException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token signature invalid.'], 401);
-        } catch (BeforeValidException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token not yet valid.'], 401);
-        } catch (Exception $e) {
-            error_log("JWT Decode Error for admin_activitylog: " . $e->getMessage());
-            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token: ' . $e->getMessage()], 401);
-        }
-        exit;
-    }
-
-
     // --- Handle GET Request: Fetch activity logs ---
     if ($method === 'GET') {
-        $adminData = authenticateAdmin($jwtKey); // All actions here require admin
+        $adminData = authenticateAdmin($jwtKey); // Using global helper function
 
         // Pagination and filtering parameters
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -173,7 +135,6 @@ try { // Global try-catch block to handle any unhandled errors
         } elseif (is_string($detailsInput)) {
             $detailsJson = $detailsInput; // Assume it's either a pre-formatted JSON string or just a text detail
         }
-
 
         try {
             $logId = 'alog_' . generateUniqueId(); // From core.php
