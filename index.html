@@ -19,15 +19,15 @@
         theme: {
           extend: {
             colors: {
-              primary: '#FAF8F5',    // Soft Warm Off-White
-              secondary: '#EAE0D5',  // Muted Dusty Rose/Light Clay
-              accent: '#15686e',     // NEW Accent Color: Deep Teal (updated from #2d8c90)
-              'accent-dark': '#115054', // Darker shade for solid hover
-              background: '#FDFBF8',  // Very Light Neutral Warm Grey
-              textOnDark: '#FBFBF5',  // Creamy Off-White
-              textOnLight: '#3C3633', // Dark Warm Grey
-              highlight: '#B07259',     // Earthy Terracotta
-              subtleBlue: '#A0AEC0',   // Muted Blue-Gray
+              primary: '#F8FCFC',    // Light teal-tinted white
+              secondary: '#E6F2F2',  // Soft teal-tinted light gray
+              accent: '#045358',     // Deep teal (main brand color)
+              'accent-dark': '#034145', // Darker shade for hover states
+              background: '#FBFEFE',  // Very light teal-tinted white
+              textOnDark: '#FFFFFF',  // Pure white for text on dark backgrounds
+              textOnLight: '#1A3335', // Deep teal-gray for text on light backgrounds
+              highlight: '#0B8A93',   // Brighter teal for highlights and accents
+              subtleBlue: '#A0C4C7',  // Muted teal-blue for subtle elements
             }
           }
         }
@@ -39,7 +39,7 @@
     <!-- PWA Manifest and Theme -->
     <link rel="manifest" href="/app/manifest.json"> <!-- Adjusted for /app/ base path -->
     <link rel="icon" href="/app/logo.png" type="image/png"> <!-- General favicon -->
-    <meta name="theme-color" content="#15686e"> <!-- Updated to new accent color -->
+    <meta name="theme-color" content="#045358"> <!-- Updated to new accent color -->
 
     <!-- iOS PWA meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,16 +48,20 @@
     <link rel="apple-touch-icon" href="/app/icons/icon-192x192.png"> <!-- Adjusted for /app/ base path -->
 
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
       body { 
         font-family: 'Inter', sans-serif; 
-        background-color: #FDFBF8; /* background color from Tailwind config */
-        color: #3C3633; /* textOnLight color from Tailwind config */
+        background-color: #FBFEFE; /* background color from Tailwind config */
+        color: #1A3335; /* textOnLight color from Tailwind config */
         margin: 0; /* Ensure no default body margin */
         display: flex; /* Ensure #root can take full height */
         flex-direction: column; /* Ensure #root can take full height */
         min-height: 100vh; /* Ensure body takes full viewport height */
         position: relative; /* For z-index stacking of pseudo-element */
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Montserrat', sans-serif;
       }
 
       /* Background Texture */
@@ -72,7 +76,7 @@
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain; 
-        opacity: 0.05; /* Adjusted for subtlety */
+        opacity: 0.03; /* Adjusted for subtlety */
         z-index: -1; 
         pointer-events: none;
       }
@@ -86,8 +90,8 @@
 
       /* Styles for Leaflet popups, ensuring they match the app's theme */
       .leaflet-popup-content-wrapper {
-        background: #FAF8F5; /* primary color */
-        color: #3C3633; /* textOnLight */
+        background: #F8FCFC; /* primary color */
+        color: #1A3335; /* textOnLight */
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       }
@@ -97,11 +101,11 @@
         line-height: 1.6;
       }
       .leaflet-popup-tip {
-        background: #FAF8F5; /* primary color */
+        background: #F8FCFC; /* primary color */
       }
       .theraway-map-popup-button {
-        background-color: #15686e; /* accent color */
-        color: #FBFBF5; /* textOnDark (updated to match textOnDark from Tailwind) */
+        background-color: #045358; /* accent color */
+        color: #FFFFFF; /* textOnDark */
         padding: 6px 12px;
         border: none;
         border-radius: 6px;
@@ -114,12 +118,48 @@
         text-align: center;
       }
       .theraway-map-popup-button:hover {
-        background-color: #115054; /* Slightly darker new accent */
+        background-color: #034145; /* Slightly darker accent */
       }
       #root {
         display: flex;
         flex-direction: column;
         flex-grow: 1; /* Ensures #root takes up available space if body is flex container */
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #E6F2F2; /* secondary color */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #0B8A93; /* highlight color */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #045358; /* accent color */
+      }
+
+      /* Card hover effects */
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(4, 83, 88, 0.1), 0 10px 10px -5px rgba(4, 83, 88, 0.04);
+      }
+
+      /* Button animations */
+      .btn-pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(4, 83, 88, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(4, 83, 88, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(4, 83, 88, 0); }
       }
     </style>
 <script type="importmap">

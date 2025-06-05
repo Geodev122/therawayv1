@@ -4,8 +4,8 @@
   "description": "A comprehensive mental health web application connecting clients with therapists and helping therapists find clinic spaces.",
   "start_url": "/app/",
   "display": "standalone",
-  "background_color": "#FDFBF8",
-  "theme_color": "#15686e",
+  "background_color": "#FBFEFE",
+  "theme_color": "#045358",
   "orientation": "portrait-primary",
   "scope": "/app/",
   "icons": [
