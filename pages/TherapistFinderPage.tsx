@@ -253,9 +253,8 @@ export const TherapistFinderPage: React.FC = () => {
       return;
     }
     
-    // TODO: Implement actual API call
-    const isCurrentlyFavorite = favorites.has(therapistId);
     // Optimistic UI update
+    const isCurrentlyFavorite = favorites.has(therapistId);
     setFavorites(prevFavorites => {
         const newFavorites = new Set(prevFavorites);
         if (isCurrentlyFavorite) newFavorites.delete(therapistId);

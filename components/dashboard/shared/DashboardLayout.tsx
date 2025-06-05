@@ -50,23 +50,19 @@ const adminNavItems: NavItem[] = [
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role, children }) => {
   const { t, direction } = useTranslation();
   let navItems: NavItem[] = [];
-  let dashboardTitleKey = '';
   let baseRoute = '';
 
   switch (role) {
     case UserRole.THERAPIST:
       navItems = therapistNavItems;
-      dashboardTitleKey = 'dashboardTherapistTitle';
       baseRoute = '/dashboard/therapist';
       break;
     case UserRole.CLINIC_OWNER:
       navItems = clinicNavItems;
-      dashboardTitleKey = 'dashboardClinicOwnerTitle';
       baseRoute = '/dashboard/clinic';
       break;
     case UserRole.ADMIN:
       navItems = adminNavItems; // Use new admin nav items
-      dashboardTitleKey = 'dashboardAdminTitle';
       baseRoute = '/dashboard/admin';
       break;
     default:
@@ -81,8 +77,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role, children
 
   return (
     <div className="flex flex-col flex-grow"> 
-      <main className="flex-grow p-6 bg-primary text-textOnLight overflow-y-auto pt-6 pb-[calc(70px+1rem)]"> 
-        <h2 className="text-2xl font-semibold text-accent mb-6">{t(dashboardTitleKey)}</h2>
+      <main className="flex-grow flex flex-col pt-[calc(4rem+1px)]"> 
         {children || <Outlet />} 
       </main>
 
