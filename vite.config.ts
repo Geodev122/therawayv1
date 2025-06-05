@@ -143,8 +143,8 @@ export default defineConfig({
   publicDir: 'public', // Specifies the directory for static assets like locales
   server: {
     proxy: {
-      '/api': {
-        target: 'http://localhost:5001',
+      '/backend/api': {
+        target: 'http://localhost:8000',
         changeOrigin: true
       }
     }
