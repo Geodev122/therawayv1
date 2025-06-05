@@ -11,12 +11,6 @@ try {
     require_once __DIR__ . '/../config/db.php'; // Provides $pdo
     require_once __DIR__ . '/../vendor/autoload.php'; // Composer autoloader
 
-    use Firebase\JWT\JWT;
-    use Firebase\JWT\Key;
-    use Firebase\JWT\ExpiredException;
-    use Firebase\JWT\SignatureInvalidException;
-    use Firebase\JWT\BeforeValidException;
-
     // --- CORS Handling ---
     handleCors(); // From core.php
 
@@ -29,55 +23,18 @@ try {
         sendJsonResponse(['status' => 'error', 'message' => 'Server configuration error (JWT).'], 500);
     }
 
-    /**
-     * Helper function to get authenticated user ID and role from JWT.
-     * @param string $jwtKey The JWT secret key.
-     * @param array $allowedRoles Array of roles allowed to perform the action.
-     * @return array ['userId' => string, 'role' => string] or exits.
-     */
-    function getAuthenticatedUser(string $jwtKey, array $allowedRoles = ['CLIENT']): array {
-        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
-        }
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        if (!str_contains($authHeader, ' ')) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Invalid Authorization header format.'], 401);
-        }
-        list($type, $token) = explode(' ', $authHeader, 2);
-
-        if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token type or token is empty.'], 401);
-        }
-
-        try {
-            $decoded = JWT::decode($token, new Key($jwtKey, 'HS256'));
-            if (!isset($decoded->data) || !isset($decoded->data->userId) || !isset($decoded->data->role)) {
-                sendJsonResponse(['status' => 'error', 'message' => 'Invalid token payload.'], 401);
-            }
-            if (!in_array($decoded->data->role, $allowedRoles)) {
-                sendJsonResponse(['status' => 'error', 'message' => 'Access denied. Required role: ' . implode(' or ', $allowedRoles) . '.'], 403);
-            }
-            return ['userId' => $decoded->data->userId, 'role' => $decoded->data->role];
-        } catch (ExpiredException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token has expired.'], 401);
-        } catch (SignatureInvalidException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token signature invalid.'], 401);
-        } catch (BeforeValidException $e) {
-            sendJsonResponse(['status' => 'error', 'message' => 'Token not yet valid.'], 401);
-        } catch (Exception $e) {
-            error_log("JWT Decode Error for client_favorites: " . $e->getMessage());
-            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token: ' . $e->getMessage()], 401);
-        }
-        exit; // Should not reach here
+    // --- Authentication Check ---
+    try {
+        $authData = getAuthenticatedUser($jwtKey, ['CLIENT']);
+        $clientUserId = $authData['userId'];
+    } catch (Exception $e) {
+        error_log("Authentication error in client_favorites.php: " . $e->getMessage());
+        sendJsonResponse(['status' => 'error', 'message' => 'Authentication failed: ' . $e->getMessage()], 401);
     }
 
     // --- Process GET Request: Fetch client's favorite therapists ---
     if ($method === 'GET') {
         try {
-            // Authenticate as CLIENT
-            $authData = getAuthenticatedUser($jwtKey, ['CLIENT']);
-            $clientUserId = $authData['userId'];
-            
             $stmt = $pdo->prepare("
                 SELECT therapist_user_id 
                 FROM client_therapist_favorites 
@@ -90,7 +47,7 @@ try {
             
             sendJsonResponse([
                 'status' => 'success',
-                'favorites' => $favorites
+                'data' => $favorites
             ]);
             
         } catch (PDOException $e) {
@@ -104,10 +61,6 @@ try {
     // --- Process POST Request: Toggle favorite status for a therapist ---
     elseif ($method === 'POST') {
         try {
-            // Authenticate as CLIENT
-            $authData = getAuthenticatedUser($jwtKey, ['CLIENT']);
-            $clientUserId = $authData['userId'];
-            
             $input = json_decode(file_get_contents('php://input'), true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -182,7 +135,7 @@ try {
                 'status' => 'success',
                 'message' => 'Favorite ' . $action . ' successfully.',
                 'action' => $action,
-                'favorites' => $updatedFavorites
+                'data' => $updatedFavorites
             ]);
             
         } catch (PDOException $e) {
