@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -92,14 +91,14 @@ export const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="bg-background backdrop-md shadow-lg sticky top-0 z-100 border-b border-accent/120">
+    <nav className="bg-background backdrop-md shadow-lg sticky top-0 z-100 border-b border-accent/20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center text-decoration-none hover:opacity-100 transition-opacity">
               <img src="/app/logo.png" alt="TheraWay Logo" className="h-8 w-auto mr-2" /> {/* Ensure /app/ prefix if base is /app/ */}
               <span className="text-2xl font-bold">
-                <span className="text-textOnLight">Thera</span><span className="text-[#15686e]">Way</span>
+                <span className="text-textOnLight">Thera</span><span className="text-accent">Way</span>
               </span>
             </Link>
           </div>

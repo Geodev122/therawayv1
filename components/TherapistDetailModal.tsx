@@ -55,7 +55,7 @@ export const TherapistDetailModal: React.FC<TherapistDetailModalProps> = ({ ther
                     size="md" 
                     isFullWidth
                     onClick={handleWhatsAppClick}
-                    leftIcon={<WhatsAppIcon className={`text-green-500 ${direction === 'rtl' ? 'ms-2' : 'me-2'}`}/>}
+                    leftIcon={<WhatsAppIcon className={`text-white ${direction === 'rtl' ? 'ms-2' : 'me-2'}`}/>}
                 >
                     {t('connectOnWhatsApp')}
                 </Button>
@@ -75,7 +75,7 @@ export const TherapistDetailModal: React.FC<TherapistDetailModalProps> = ({ ther
                 <Section title={t('specializations')}>
                     <div className="flex flex-wrap gap-2">
                         {therapist.specializations.map(spec => (
-                            <span key={spec} className="bg-secondary/30 text-accent px-3 py-1 rounded-full text-sm font-medium">{spec}</span>
+                            <span key={spec} className="bg-secondary text-accent px-3 py-1 rounded-full text-sm font-medium">{spec}</span>
                         ))}
                     </div>
                 </Section>

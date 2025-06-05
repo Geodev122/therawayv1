@@ -1,4 +1,3 @@
-
 import React, { ChangeEvent, useState } from 'react';
 import { InformationCircleIcon } from '../../icons';
 import { useTranslation } from '../../../hooks/useTranslation'; // Import useTranslation

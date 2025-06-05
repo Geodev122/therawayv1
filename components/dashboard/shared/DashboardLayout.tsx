@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { UserRole } from '../../../types';
@@ -101,7 +100,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role, children
                transition-all duration-200 ease-in-out active:scale-95 hover:scale-[1.02] hover:bg-accent/10
               ${
                 isActive 
-                  ? 'text-accent scale-105 font-semibold shadow-[0_0_10px_rgba(21,104,110,0.35)]' // Updated shadow color to accent based
+                  ? 'text-accent scale-105 font-semibold shadow-[0_0_10px_rgba(4,83,88,0.35)]' // Updated shadow color to accent based
                   : 'text-textOnLight/70 hover:text-accent' 
               }`
             }

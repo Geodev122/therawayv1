@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ClinicSpaceListing } from '../../types';
 import { Modal } from '../common/Modal';

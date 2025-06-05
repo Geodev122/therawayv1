@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Therapist } from '../types';
 import { StarIcon, HeartIcon, MapPinIcon, WhatsAppIcon } from './icons';
@@ -60,7 +59,7 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onViewP
             <Button 
                 variant="primary" 
                 size="sm" 
-                className="w-full sm:w-auto flex-1 !bg-accent !text-textOnDark hover:!bg-accent/90" // Updated button style
+                className="w-full sm:w-auto flex-1" 
                 onClick={(e) => { e.stopPropagation(); onViewProfile(therapist); }}
             >
                 View Profile
@@ -68,7 +67,7 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onViewP
             <Button 
                 variant="ghost" 
                 size="sm" 
-                className="w-full sm:w-auto flex-1 border !border-highlight !text-highlight hover:!bg-highlight/10" // Updated button style
+                className="w-full sm:w-auto flex-1 border !border-accent !text-accent hover:!bg-accent/10" 
                 onClick={handleWhatsAppClick}
                 leftIcon={<WhatsAppIcon className="text-green-500"/>}
             >

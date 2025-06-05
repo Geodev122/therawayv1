@@ -1,4 +1,3 @@
-
 import React, {useState} from 'react';
 import { Therapist } from '../../types';
 import { StarIcon, MapPinIcon, PlayIcon, InformationCircleIcon, FlowerTickIcon } from '../icons';

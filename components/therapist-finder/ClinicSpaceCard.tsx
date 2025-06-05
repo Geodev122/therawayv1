@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClinicSpaceListing } from '../../types';
 import { Button } from '../common/Button';
