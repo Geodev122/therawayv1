@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title id="splashTitle">TheraWay - Your Path to Wellness</title>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#FAF8F5',    // Soft Warm Off-White
+              secondary: '#EAE0D5',  // Muted Dusty Rose/Light Clay
+              accent: '#15686e',     // NEW Accent Color: Deep Teal
+              'accent-dark': '#115054', // Darker shade for solid hover
+              background: '#FDFBF8',  // Very Light Neutral Warm Grey
+              textOnDark: '#FBFBF5',  // Creamy Off-White
+              textOnLight: '#3C3633', // Dark Warm Grey
+              highlight: '#B07259',   // Earthy Terracotta
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+      html, body {
+        height: 100%; /* Ensure html and body can take full height */
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        /* overflow-x is handled by overflow-hidden on body */
+        /* overflow-y is handled by the inner scrollable div */
+        /* background-color is on the body class */
+        position: relative; /* For pseudo-elements */
+      }
+      /* Soft Radial Gradient Background */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(ellipse at center, rgba(250, 248, 245, 0.1) 0%, #FDFBF8 70%); /* primary to background */
+        opacity: 0.8; 
+        z-index: -2;
+        pointer-events: none;
+      }
+      /* Background Texture */
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: url('/app/flower-texture.png');
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        opacity: 0.03; 
+        z-index: -1; 
+        pointer-events: none;
+      }
+      html[dir="rtl"] .text-left { text-align: right; }
+      html[dir="rtl"] .text-right { text-align: left; }
+      html[dir="rtl"] .sm\:text-left { @media (min-width: 640px) { text-align: right; } }
+      html[dir="rtl"] .sm\:text-right { @media (min-width: 640px) { text-align: left; } }
+      html[dir="rtl"] .md\:text-left { @media (min-width: 768px) { text-align: right; } }
+      html[dir="rtl"] .md\:text-right { @media (min-width: 768px) { text-align: left; } }
+
+      .card-icon svg {
+        width: 2.5rem; /* 40px */
+        height: 2.5rem; /* 40px */
+        margin-bottom: 0.75rem; /* mb-3 */
+      }
+    </style>
+</head>
+<body class="text-textOnLight flex flex-col h-screen overflow-hidden bg-background">
+
+    <!-- This div is the effective viewport with 0.5rem padding (p-2) and its own scroll -->
+    <div class="h-full w-full p-2 flex flex-col overflow-y-auto">
+        
+        <!-- Content grouping div that uses flex-grow -->
+        <div class="flex-grow w-full max-w-3xl mx-auto flex flex-col items-center text-center"> 
+            <header class="mb-10 sm:mb-12 pt-2 sm:pt-4">
+                <img src="/app/logo.png" alt="TheraWay Logo" class="h-16 sm:h-20 w-auto mx-auto mb-4"/>
+                <h1 class="text-3xl sm:text-4xl font-bold">
+                    <span id="theraText" class="text-textOnLight">Thera</span><span id="wayText" class="text-accent">Way</span>
+                </h1>
+                <p id="splashMainSubtitle" class="mt-2 text-base sm:text-lg text-textOnLight/80 max-w-xl mx-auto">
+                    Your Path to Clarity and Growth.
+                </p>
+            </header>
+    
+            <main class="w-full px-2 sm:px-0">
+                <a id="exploreTherapistsButton" href="/app/"
+                   class="block bg-accent hover:bg-accent-dark text-textOnDark font-semibold py-3.5 px-8 text-base sm:text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-background w-full max-w-md mx-auto mb-10 sm:mb-12">
+                    Find Support & Explore Therapists
+                </a>
+                
+                <div class="mb-8 text-center">
+                    <h2 id="professionalsSectionTitle" class="text-xl sm:text-2xl font-medium text-textOnLight/90">Are you a Professional?</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 w-full">
+                    <div class="bg-primary border border-secondary/70 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center sm:items-start sm:text-left">
+                        <div class="card-icon text-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.098a2.25 2.25 0 01-2.25 2.25h-12a2.25 2.25 0 01-2.25-2.25V14.15M16.5 14.15v-2.475a3.375 3.375 0 00-3.375-3.375h-1.5A3.375 3.375 0 008.25 11.675v2.475M16.5 14.15M12 14.15h4.5m-4.5 0H7.5m11.25-4.5H7.5m9 3.75h-3.75a3.375 3.375 0 01-3.375-3.375V8.25a3.375 3.375 0 013.375-3.375h3.75a3.375 3.375 0 013.375 3.375v.75" /></svg>
+                        </div>
+                        <h3 id="therapistCardTitle" class="text-xl font-semibold text-accent mb-2">Therapists: Elevate Your Practice</h3>
+                        <p id="therapistCardHook" class="text-sm text-textOnLight/80 mb-4 flex-grow">Connect with clients seeking your expertise. Discover and manage ideal practice locations seamlessly.</p>
+                        <a id="therapistPortalLink" href="/app/#/login" class="mt-auto inline-block bg-secondary hover:bg-secondary/80 text-textOnLight font-medium py-2.5 px-6 rounded-lg text-sm transition-all duration-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-2 focus:ring-offset-primary"
+                           onclick="sessionStorage.setItem('intendedRole', 'THERAPIST');">
+                            Therapist Portal
+                        </a>
+                    </div>
+
+                    <div class="bg-primary border border-secondary/70 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center sm:items-start sm:text-left">
+                         <div class="card-icon text-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6.75h1.5m-1.5 3h1.5m-1.5 3h1.5M6.75 21v-2.25a2.25 2.25 0 012.25-2.25h6a2.25 2.25 0 012.25 2.25V21m-9-6.75h6" /></svg>
+                        </div>
+                        <h3 id="clinicOwnerCardTitle" class="text-xl font-semibold text-accent mb-2">Clinic Owners: Showcase Your Space</h3>
+                        <p id="clinicOwnerCardHook" class="text-sm text-textOnLight/80 mb-4 flex-grow">List your professional clinic spaces. Attract qualified therapists. Streamline your rental management.</p>
+                        <a id="clinicOwnerPortalLink" href="/app/#/login" class="mt-auto inline-block bg-secondary hover:bg-secondary/80 text-textOnLight font-medium py-2.5 px-6 rounded-lg text-sm transition-all duration-200 w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-2 focus:ring-offset-primary"
+                           onclick="sessionStorage.setItem('intendedRole', 'CLINIC_OWNER');">
+                            Clinic Owner Portal
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer at the bottom of the scrollable area -->
+        <footer class="w-full text-center py-4 flex-shrink-0 mt-auto">
+            <button onclick="toggleLanguage()" id="languageToggle" class="text-xs text-textOnLight/70 hover:text-textOnLight mb-2">
+                EN / AR
+            </button>
+            <p id="copyrightText" class="text-xs text-textOnLight/70">&copy; 2024 TheraWay. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        const splashScreenTexts = {
+            en: {
+                splashTitle: "TheraWay - Find Your Clarity. Begin Your Journey.",
+                theraText: "Thera", 
+                wayText: "Way",   
+                splashMainSubtitle: " Discover your path to growth with TheraWay.",
+                exploreTherapistsButton: "Find Support & Explore Therapists",
+                professionalsSectionTitle: "Are you a Professional?",
+                therapistCardTitle: "Therapists: Elevate Your Practice",
+                therapistPortalLink: "Therapist Portal",
+                clinicOwnerCardTitle: "Clinic Owners: Showcase Your Space",
+                clinicOwnerPortalLink: "Clinic Owner Portal",
+                languageToggle: "العربية",
+                copyrightText: "&copy; " + new Date().getFullYear() + " TheraWay. All rights reserved."
+            },
+            ar: {
+                splashTitle: "ثيرواي - جد صفاءك. ابدأ رحلتك.",
+                theraText: "ثير",
+                wayText: "واي",
+                splashMainSubtitle: "اكتشف طريقك نحو النمو مع ثيرواي.",
+                exploreTherapistsButton: "ابحث عن الدعم واستكشف المعالجين",
+                professionalsSectionTitle: "هل أنت محترف؟",
+                therapistCardTitle: "للمعالجين: ارتقِ بممارستك",
+                therapistCardHook: "تواصل مع العملاء الباحثين عن خبرتك. اكتشف وأدر مواقع ممارسة مثالية بسلاسة.",
+                therapistPortalLink: "بوابة المعالجين",
+                clinicOwnerCardTitle: "لأصحاب العيادات: اعرض مساحتك",
+                clinicOwnerCardHook: "أدرج مساحات عيادتك الاحترافية. اجذب المعالجين المؤهلين. بسّط إدارة إيجاراتك.",
+                clinicOwnerPortalLink: "بوابة أصحاب العيادات",
+                languageToggle: "English",
+                copyrightText: "&copy; " + new Date().getFullYear() + " ثيرواي. جميع الحقوق محفوظة."
+            }
+        };
+
+        function updateSplashText(lang) {
+            const texts = splashScreenTexts[lang] || splashScreenTexts.en;
+            document.getElementById('splashTitle').textContent = texts.splashTitle;
+            document.getElementById('splashMainSubtitle').textContent = texts.splashMainSubtitle;
+            document.getElementById('exploreTherapistsButton').textContent = texts.exploreTherapistsButton;
+            document.getElementById('professionalsSectionTitle').textContent = texts.professionalsSectionTitle;
+            
+            document.getElementById('therapistCardTitle').textContent = texts.therapistCardTitle;
+            document.getElementById('therapistCardHook').textContent = texts.therapistCardHook;
+            document.getElementById('therapistPortalLink').textContent = texts.therapistPortalLink;
+            
+            document.getElementById('clinicOwnerCardTitle').textContent = texts.clinicOwnerCardTitle;
+            document.getElementById('clinicOwnerCardHook').textContent = texts.clinicOwnerCardHook;
+            document.getElementById('clinicOwnerPortalLink').textContent = texts.clinicOwnerPortalLink;
+
+            document.getElementById('languageToggle').textContent = texts.languageToggle;
+            document.getElementById('copyrightText').innerHTML = texts.copyrightText; 
+        }
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            localStorage.setItem('theraWayLanguage', lang);
+            updateSplashText(lang);
+        }
+
+        function toggleLanguage() {
+            const currentLang = localStorage.getItem('theraWayLanguage') || 'en';
+            const newLang = currentLang === 'en' ? 'ar' : 'en';
+            setLanguage(newLang);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const preferredLang = localStorage.getItem('theraWayLanguage') || 'en';
+            setLanguage(preferredLang);
+            const wayTextEl = document.getElementById('wayText');
+            if (wayTextEl) {
+                // Directly use the known accent color string
+                wayTextEl.style.color = '#15686e'; 
+            }
+        });
+    </script>
+</body>
+</html>

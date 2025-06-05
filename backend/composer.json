@@ -1,0 +1,20 @@
+
+{
+    "name": "theraway/backend",
+    "description": "PHP backend for TheraWay application.",
+    "type": "project",
+    "require": {
+        "php": ">=7.4 || >=8.0",
+        "firebase/php-jwt": "^6.10"
+    },
+    "authors": [
+        {
+            "name": "TheraWay Development",
+            "email": "dev@theraway.net"
+        }
+    ],
+    "minimum-stability": "stable",
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
