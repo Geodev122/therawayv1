@@ -33,20 +33,6 @@ export const LoginPage: React.FC = () => {
 
   usePageTitle(pageTitleKey);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      closeLoginPrompt();
-      let redirectTo = '/';
-      if (user.role === UserRole.THERAPIST) redirectTo = '/dashboard/therapist';
-      else if (user.role === UserRole.CLINIC_OWNER) redirectTo = '/dashboard/clinic';
-      else if (user.role === UserRole.ADMIN) redirectTo = '/dashboard/admin';
-      else if (user.role === UserRole.CLIENT) redirectTo = '/'; // Clients go to therapist finder
-      
-      const from = (location.state as any)?.from?.pathname || redirectTo;
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, user, navigate, location.state, closeLoginPrompt]);
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -71,6 +57,19 @@ export const LoginPage: React.FC = () => {
     setPassword('');
   }, [isSignup]);
 
+  // Redirect after authentication
+  if (isAuthenticated && user) {
+    closeLoginPrompt(); 
+    let redirectTo = '/'; 
+    if (user.role === UserRole.THERAPIST) redirectTo = '/dashboard/therapist';
+    else if (user.role === UserRole.CLINIC_OWNER) redirectTo = '/dashboard/clinic';
+    else if (user.role === UserRole.ADMIN) redirectTo = '/dashboard/admin';
+    else if (user.role === UserRole.CLIENT) redirectTo = '/'; // Clients go to therapist finder
+    
+    const from = (location.state as any)?.from?.pathname || redirectTo;
+    return <Navigate to={from} replace />;
+  }
+
   return (
     <div className="min-h-screen flex items-start justify-center bg-background px-5 pt-0 pb-5">
       <div className="bg-primary text-textOnLight p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md mt-8 sm:mt-12">
@@ -88,7 +87,7 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {isSignup && (
             <div>
-              <label htmlFor="name\" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('fullName')} <span className="text-red-500">*</span>
               </label>
               <input
