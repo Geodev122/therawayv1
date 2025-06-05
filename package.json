@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "deploy": "firebase deploy",
-    "emulators": "firebase emulators:start"
+    "emulators": "firebase emulators:start",
+    "migrate": "node -r ts-node/register src/migration/migrateData.ts"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -26,6 +27,7 @@
     "vite-plugin-pwa": "^0.17.4",
     "workbox-precaching": "^7.0.0",
     "workbox-routing": "^7.0.0",
-    "workbox-strategies": "^7.0.0"
+    "workbox-strategies": "^7.0.0",
+    "ts-node": "^10.9.2"
   }
 }

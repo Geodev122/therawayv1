@@ -4,7 +4,11 @@ import {
   signOut, 
   updateProfile,
   User as FirebaseUser,
-  UserCredential
+  UserCredential,
+  sendPasswordResetEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from './config';
@@ -41,7 +45,9 @@ export const signUp = async (
     // Create role-specific data
     if (role === UserRole.THERAPIST) {
       await setDoc(doc(firestore, 'therapists_data', firebaseUser.uid), {
-        userId: firebaseUser.uid,
+        id: firebaseUser.uid,
+        name,
+        email,
         accountStatus: 'draft',
         bio: '',
         specializations: [],
@@ -50,16 +56,31 @@ export const signUp = async (
         locations: [],
         rating: 0,
         reviewCount: 0,
+        profileViews: 0,
+        likes_count: 0,
+        whatsappNumber: '',
+        isVerified: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
     } else if (role === UserRole.CLINIC_OWNER) {
       const clinicId = `clinic_${firebaseUser.uid}`;
       await setDoc(doc(firestore, 'clinics_data', clinicId), {
-        clinicId,
+        id: clinicId,
         ownerId: firebaseUser.uid,
         name: `${name}'s Clinic`,
         accountStatus: 'draft',
+        description: '',
+        address: '',
+        whatsappNumber: '',
+        amenities: [],
+        operatingHours: {},
+        services: [],
+        photos: [],
+        isVerified: false,
+        theraWayMembership: {
+          status: 'none'
+        },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
@@ -115,5 +136,36 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
   } catch (error: any) {
     console.error('Error getting current user:', error);
     return null;
+  }
+};
+
+// Send password reset email
+export const resetPassword = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error: any) {
+    console.error('Error sending password reset email:', error);
+    throw new Error(error.message || 'Failed to send password reset email');
+  }
+};
+
+// Change password (requires reauthentication)
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  try {
+    const user = auth.currentUser;
+    
+    if (!user || !user.email) {
+      throw new Error('No authenticated user found');
+    }
+    
+    // Reauthenticate user
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    
+    // Change password
+    await updatePassword(user, newPassword);
+  } catch (error: any) {
+    console.error('Error changing password:', error);
+    throw new Error(error.message || 'Failed to change password');
   }
 };
