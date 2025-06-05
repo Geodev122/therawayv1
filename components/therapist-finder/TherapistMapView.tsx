@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Therapist } from '../../types';
 import { useTranslation } from '../../hooks/useTranslation'; // Import useTranslation

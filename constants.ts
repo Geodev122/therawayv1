@@ -62,3 +62,9 @@ export const CLINIC_SPACE_FEATURES_LIST = [
     "Natural Light", "Dimmable Lighting", "Secure Entry", "Wheelchair Accessible",
     "Tea/Coffee Making Facilities", "Reception Services", "Cleaning Services"
 ];
+
+// --- MOCK DATA REMOVED ---
+// All mock data arrays like MOCK_USERS_FOR_ADMIN, MOCK_THERAPISTS, MOCK_CLINICS,
+// MOCK_SYSTEM_HEALTH, MOCK_ACTIVITY_LOGS, MOCK_USER_INQUIRIES
+// have been removed from this file. The application is expected to fetch
+// all dynamic data from a backend API.
