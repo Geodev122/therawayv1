@@ -66,7 +66,7 @@ export const SwipableTherapistCard: React.FC<SwipableTherapistCardProps> = ({ th
         {!showVideo && (
             <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${therapist.introVideoUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
                  {therapist.introVideoUrl ? (
-                    <PlayIcon className="w-16 h-16 text-white/80 drop-shadow-lg" title={t('playIntroVideo', {default: "Play intro video"})}/>
+                    <PlayIcon className="w-16 h-16 text-white/80 drop-shadow-lg\" title={t('playIntroVideo', {default: "Play intro video"})}/>
                  ) : (
                     <InformationCircleIcon className="w-12 h-12 text-white/50 drop-shadow-lg" title={t('noIntroVideoAvailable', {default: "No intro video available"})}/>
                  )}

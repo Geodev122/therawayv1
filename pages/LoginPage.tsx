@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {isSignup && (
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name\" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('fullName')} <span className="text-red-500">*</span>
               </label>
               <input
