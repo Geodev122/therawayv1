@@ -25,7 +25,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: UserRo
   if (authLoading) { 
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent" title={t('loading')}/>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent\" title={t('loading')}/>
       </div>
     );
   }
@@ -75,7 +75,7 @@ const AppContent: React.FC = () => {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<TherapistFinderPage />} /> 
-            <Route path="/therapists" element={<Navigate to="/" replace />} />
+            <Route path="/therapists" element={<Navigate to="/\" replace />} />
 
             {/* Protected Dashboard Routes */}
             <Route 
@@ -116,7 +116,7 @@ const AppContent: React.FC = () => {
               element={
                 authLoading ? <LoadingFallback /> : 
                 isAuthenticated ? (
-                  user?.role === UserRole.THERAPIST ? <Navigate to="/dashboard/therapist" replace /> :
+                  user?.role === UserRole.THERAPIST ? <Navigate to="/dashboard/therapist\" replace /> :
                   user?.role === UserRole.CLINIC_OWNER ? <Navigate to="/dashboard/clinic" replace /> :
                   user?.role === UserRole.ADMIN ? <Navigate to="/dashboard/admin" replace /> :
                   user?.role === UserRole.CLIENT ? <Navigate to="/dashboard/client/profile" replace /> :
