@@ -10,14 +10,15 @@
         theme: {
           extend: {
             colors: {
-              primary: '#F8FCFC',    // Light teal-tinted white
-              secondary: '#E6F2F2',  // Soft teal-tinted light gray
-              accent: '#045358',     // Deep teal (main brand color)
-              'accent-dark': '#034145', // Darker shade for hover states
-              background: '#FBFEFE',  // Very light teal-tinted white
-              textOnDark: '#FFFFFF',  // Pure white for text on dark backgrounds
-              textOnLight: '#1A3335', // Deep teal-gray for text on light backgrounds
-              highlight: '#0B8A93',   // Brighter teal for highlights and accents
+              primary: '#FAF8F5',    // Soft Warm Off-White
+              secondary: '#EAE0D5',  // Muted Dusty Rose/Light Clay
+              accent: '#15686e',     // Deep Teal
+              'accent-dark': '#115054', // Darker shade for solid hover
+              background: '#FDFBF8',  // Very Light Neutral Warm Grey
+              textOnDark: '#FBFBF5',  // Creamy Off-White
+              textOnLight: '#3C3633', // Dark Warm Grey
+              highlight: '#B07259',     // Earthy Terracotta
+              subtleBlue: '#A0AEC0',   // Muted Blue-Gray
             }
           }
         }
@@ -25,14 +26,11 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #FBFEFE;
-        color: #1A3335;
-      }
-      h1, h2, h3, h4, h5, h6 {
-        font-family: 'Montserrat', sans-serif;
+        background-color: #FDFBF8;
+        color: #3C3633;
       }
     </style>
 </head>
@@ -46,7 +44,7 @@
             It seems you're not connected to the internet. Some features may be unavailable. Please check your connection.
         </p>
         <button
-            onclick="window.location.href = '/app/';"
+            onclick="window.location.reload();"
             class="bg-accent hover:bg-accent-dark text-textOnDark font-semibold py-2 px-6 rounded-lg transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 focus:ring-offset-primary w-full"
         >
             Try Again

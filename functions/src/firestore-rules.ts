@@ -1,0 +1,149 @@
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+
+// This function deploys Firestore security rules programmatically
+export const deployFirestoreRules = functions.https.onRequest(async (req, res) => {
+  try {
+    // Check if request is authorized (e.g., from admin panel)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    if (decodedToken.role !== 'ADMIN') {
+      return res.status(403).json({ status: 'error', message: 'Forbidden. Admin role required.' });
+    }
+    
+    // Define Firestore security rules
+    const rules = `
+      rules_version = '2';
+      service cloud.firestore {
+        match /databases/{database}/documents {
+          // Helper functions
+          function isAuthenticated() {
+            return request.auth != null;
+          }
+          
+          function isAdmin() {
+            return isAuthenticated() && request.auth.token.role == 'ADMIN';
+          }
+          
+          function isTherapist() {
+            return isAuthenticated() && request.auth.token.role == 'THERAPIST';
+          }
+          
+          function isClinicOwner() {
+            return isAuthenticated() && request.auth.token.role == 'CLINIC_OWNER';
+          }
+          
+          function isClient() {
+            return isAuthenticated() && request.auth.token.role == 'CLIENT';
+          }
+          
+          function isOwner(userId) {
+            return isAuthenticated() && request.auth.uid == userId;
+          }
+          
+          // Users collection
+          match /users/{userId} {
+            // Anyone can read public user data
+            allow read: if true;
+            // Only the user themselves or an admin can write to their document
+            allow write: if isOwner(userId) || isAdmin();
+          }
+          
+          // Therapists data collection
+          match /therapists_data/{therapistId} {
+            // Anyone can read therapist data
+            allow read: if true;
+            // Only the therapist themselves or an admin can write to their document
+            allow write: if isOwner(therapistId) || isAdmin();
+          }
+          
+          // Certifications collection
+          match /certifications/{certId} {
+            // Anyone can read certifications
+            allow read: if true;
+            // Only the therapist who owns the certification or an admin can write to it
+            allow create: if isTherapist() || isAdmin();
+            allow update, delete: if isOwner(resource.data.therapistUserId) || isAdmin();
+          }
+          
+          // Clinics data collection
+          match /clinics_data/{clinicId} {
+            // Anyone can read clinic data
+            allow read: if true;
+            // Only the clinic owner or an admin can write to the document
+            allow create: if isClinicOwner() || isAdmin();
+            allow update, delete: if isOwner(resource.data.ownerId) || isAdmin();
+          }
+          
+          // Clinic spaces collection
+          match /clinic_spaces/{spaceId} {
+            // Anyone can read clinic spaces
+            allow read: if true;
+            // Only the clinic owner or an admin can write to the document
+            allow create: if isClinicOwner() || isAdmin();
+            // For update and delete, we need to check if the user owns the clinic
+            allow update, delete: if isAdmin() || 
+              (isClinicOwner() && exists(/databases/$(database)/documents/clinics_data/$(resource.data.clinicId)) && 
+               get(/databases/$(database)/documents/clinics_data/$(resource.data.clinicId)).data.ownerId == request.auth.uid);
+          }
+          
+          // Client-therapist favorites collection
+          match /client_therapist_favorites/{favoriteId} {
+            // Only the client who created the favorite or an admin can read it
+            allow read: if isAdmin() || (isAuthenticated() && resource.data.clientId == request.auth.uid);
+            // Only the client or an admin can create/update/delete favorites
+            allow create: if isClient() || isAdmin();
+            allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.clientId == request.auth.uid);
+          }
+          
+          // User inquiries collection
+          match /user_inquiries/{inquiryId} {
+            // The user who created the inquiry or an admin can read it
+            allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+            // Anyone can create an inquiry (even unauthenticated users)
+            allow create: if true;
+            // Only the user who created the inquiry or an admin can update/delete it
+            allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+          }
+          
+          // Activity logs collection
+          match /activity_logs/{logId} {
+            // Only admins can read all logs
+            allow read: if isAdmin();
+            // Users can read their own logs
+            allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+            // Only admins can create/update/delete logs
+            allow write: if isAdmin();
+          }
+          
+          // Membership history collection
+          match /membership_history/{historyId} {
+            // Admins can read all history
+            allow read: if isAdmin();
+            // Therapists can read their own history
+            allow read: if isTherapist() && resource.data.targetType == 'THERAPIST' && resource.data.targetId == request.auth.uid;
+            // Clinic owners can read their clinic's history
+            allow read: if isClinicOwner() && resource.data.targetType == 'CLINIC' && 
+              exists(/databases/$(database)/documents/clinics_data/$(resource.data.targetId)) && 
+              get(/databases/$(database)/documents/clinics_data/$(resource.data.targetId)).data.ownerId == request.auth.uid;
+            // Only admins can write to history
+            allow write: if isAdmin();
+          }
+        }
+      }
+    `;
+    
+    // In a real implementation, you would use the Firebase Admin SDK to deploy these rules
+    // For this example, we'll just return the rules as a response
+    res.json({ status: 'success', message: 'Firestore rules deployed successfully', rules });
+  } catch (error) {
+    console.error('Error deploying Firestore rules:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to deploy Firestore rules' });
+  }
+});

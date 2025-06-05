@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -6,7 +6,10 @@ import { FirebaseProvider } from './contexts/FirebaseContext';
 import { useTranslation } from './hooks/useTranslation';
 import { Navbar } from './components/Navbar';
 import { LoginPromptModal } from './components/auth/LoginPromptModal';
+import { OfflineNotification } from './components/common/OfflineNotification';
+import { InstallPrompt } from './components/common/InstallPrompt';
 import { UserRole } from './types';
+import { registerServiceWorker, setupOfflineDetection } from './src/pwa';
 
 // Eagerly import page components using relative paths
 import { LoginPage } from './pages/LoginPage';
@@ -15,7 +18,13 @@ import { TherapistDashboardRoutes } from './pages/dashboard/TherapistDashboardPa
 import { ClinicOwnerDashboardRoutes } from './pages/dashboard/ClinicOwnerDashboardPage';
 import { AdminDashboardRoutes } from './pages/dashboard/AdminDashboardPage';
 import { ClientProfilePage } from './pages/dashboard/client/ClientProfilePage';
+import { MigrationPage } from './src/migration/MigrationPage';
 
+// Register service worker for PWA
+registerServiceWorker();
+
+// Setup offline detection
+setupOfflineDetection();
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: UserRole[] }> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, authLoading } = useAuth(); 
@@ -25,7 +34,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: UserRo
   if (authLoading) { 
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent\" title={t('loading')}/>
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent" title={t('loading')}/>
       </div>
     );
   }
@@ -75,7 +84,17 @@ const AppContent: React.FC = () => {
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<TherapistFinderPage />} /> 
-            <Route path="/therapists" element={<Navigate to="/\" replace />} />
+            <Route path="/therapists" element={<Navigate to="/" replace />} />
+            
+            {/* Migration Tool (Admin Only) */}
+            <Route 
+              path="/migration"
+              element={
+                <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <MigrationPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Protected Dashboard Routes */}
             <Route 
@@ -116,7 +135,7 @@ const AppContent: React.FC = () => {
               element={
                 authLoading ? <LoadingFallback /> : 
                 isAuthenticated ? (
-                  user?.role === UserRole.THERAPIST ? <Navigate to="/dashboard/therapist\" replace /> :
+                  user?.role === UserRole.THERAPIST ? <Navigate to="/dashboard/therapist" replace /> :
                   user?.role === UserRole.CLINIC_OWNER ? <Navigate to="/dashboard/clinic" replace /> :
                   user?.role === UserRole.ADMIN ? <Navigate to="/dashboard/admin" replace /> :
                   user?.role === UserRole.CLIENT ? <Navigate to="/dashboard/client/profile" replace /> :
@@ -132,6 +151,8 @@ const AppContent: React.FC = () => {
         onClose={closeLoginPrompt}
         actionAttempted={actionAttempted}
       />
+      <OfflineNotification />
+      <InstallPrompt />
     </div>
   );
 };

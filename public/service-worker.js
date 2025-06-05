@@ -1,31 +1,22 @@
-const CACHE_NAME = 'theraway-v1.2-app'; // Increment version and mark for /app deployment
+const CACHE_NAME = 'theraway-v2.0';
 const APP_SHELL_FILES = [
-  '/app/',
-  '/app/index.html',
-  '/app/offline.html',
-  // Vite generates hashed assets, which makes manual precaching tricky without a build step.
-  // For a basic PWA, we'll cache the main entry points.
-  // More robust caching would involve a Vite PWA plugin or dynamic caching of JS/CSS.
-  // '/app/index.tsx', // Source files aren't served directly; build outputs are.
-  // Placeholder for main JS and CSS bundles - these names change with Vite builds.
-  // These will be cached on first load dynamically if not listed here.
-  // Add manifest.json
-  '/app/manifest.json',
-  // Add key icons if they are in public and not dynamically generated paths
-  '/app/icons/icon-192x192.png',
-  '/app/icons/icon-512x512.png'
+  '/',
+  '/index.html',
+  '/offline.html',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
-const API_BASE_URL_SW = '/backend/api/'; // Assuming API remains at domain root
+const API_BASE_URL = '/api/';
+const FIREBASE_API_URL = 'https://firebasestorage.googleapis.com/';
 
 self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Install');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Pre-caching App Shell for /app/');
-      // Add essential app shell files to cache.
-      // Some files might fail if they are not found (e.g. hashed assets), so we use addAll with a catch.
+      console.log('[ServiceWorker] Pre-caching App Shell');
       return cache.addAll(APP_SHELL_FILES).catch(error => {
-        console.warn('[ServiceWorker] Some files failed to pre-cache (this might be okay for hashed assets):', error);
+        console.warn('[ServiceWorker] Some files failed to pre-cache:', error);
       });
     })
   );
@@ -51,9 +42,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // API calls: Network first, then cache, then specific offline handling (optional)
-  // This condition assumes your API is NOT under /app/
-  if (url.pathname.startsWith(API_BASE_URL_SW)) {
+  // API calls: Network first, then cache
+  if (url.pathname.startsWith(API_BASE_URL) || url.origin.includes('firebaseapp.com') || url.origin.includes('googleapis.com')) {
     event.respondWith(
       fetch(request)
         .then(response => {
@@ -76,12 +66,43 @@ self.addEventListener('fetch', (event) => {
             // Return a generic error JSON response for API calls
             return new Response(JSON.stringify({ 
               status: 'error', 
-              message: 'Offline. Could not fetch data from the network.',
+              message: 'You are offline. Could not fetch data from the network.',
               offline: true 
             }), {
               headers: { 'Content-Type': 'application/json' }
             });
           });
+        })
+    );
+    return;
+  }
+
+  // For Firebase Storage (images, videos, etc.)
+  if (url.origin.includes(FIREBASE_API_URL)) {
+    event.respondWith(
+      caches.match(request)
+        .then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return fetch(request)
+            .then(response => {
+              if (response.ok) {
+                const responseToCache = response.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(request, responseToCache);
+                });
+              }
+              return response;
+            })
+            .catch(() => {
+              // For images, return a placeholder
+              if (request.destination === 'image') {
+                return caches.match('/icons/placeholder-image.png');
+              }
+              // For other resources, just let it fail
+              throw new Error('Network error and no cache available');
+            });
         })
     );
     return;
@@ -110,15 +131,14 @@ self.addEventListener('fetch', (event) => {
             })
             .catch(() => {
               // Network failed and not in cache, serve offline page
-              return caches.match('/app/offline.html'); // Updated path
+              return caches.match('/offline.html');
             });
         })
     );
     return;
   }
 
-  // For other static assets (CSS, JS, images): Cache-first or Stale-While-Revalidate
-  // Using Cache-First for simplicity here
+  // For other static assets (CSS, JS, images): Cache-first
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -127,21 +147,196 @@ self.addEventListener('fetch', (event) => {
       return fetch(request).then((networkResponse) => {
         // Cache new assets on the fly
         if (networkResponse && networkResponse.ok) {
-          // Check if the request is for an external CDN resource (like Tailwind or FontAwesome)
-          // Avoid caching opaque responses unless specifically intended
-          if (url.hostname === self.location.hostname || url.protocol === 'https:') { // Cache same-origin or HTTPS CDN
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
         }
         return networkResponse;
       }).catch(() => {
-        // If an image or other asset fails and is not cached, 
-        // you might want to return a placeholder image, but for now, just let it fail.
-        // For fonts, browsers have their own fallbacks.
+        // If an image fails and is not cached, return a placeholder
+        if (request.destination === 'image') {
+          return caches.match('/icons/placeholder-image.png');
+        }
+        // For other resources, just let it fail
+        throw new Error('Network error and no cache available');
       });
+    })
+  );
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-favorites') {
+    event.waitUntil(syncFavorites());
+  } else if (event.tag === 'sync-profile-updates') {
+    event.waitUntil(syncProfileUpdates());
+  }
+});
+
+// Function to sync favorites when back online
+async function syncFavorites() {
+  try {
+    const db = await openIndexedDB();
+    const pendingFavorites = await getPendingFavorites(db);
+    
+    for (const favorite of pendingFavorites) {
+      try {
+        await fetch('/api/client_favorites', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${favorite.token}`
+          },
+          body: JSON.stringify({ therapistId: favorite.therapistId })
+        });
+        
+        // Remove from pending queue
+        await removePendingFavorite(db, favorite.id);
+      } catch (error) {
+        console.error('Error syncing favorite:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error in syncFavorites:', error);
+  }
+}
+
+// Function to sync profile updates when back online
+async function syncProfileUpdates() {
+  try {
+    const db = await openIndexedDB();
+    const pendingUpdates = await getPendingProfileUpdates(db);
+    
+    for (const update of pendingUpdates) {
+      try {
+        await fetch('/api/user_profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${update.token}`
+          },
+          body: JSON.stringify(update.data)
+        });
+        
+        // Remove from pending queue
+        await removePendingProfileUpdate(db, update.id);
+      } catch (error) {
+        console.error('Error syncing profile update:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error in syncProfileUpdates:', error);
+  }
+}
+
+// IndexedDB helper functions
+async function openIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('theraWayOfflineDB', 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Create object stores for pending actions
+      if (!db.objectStoreNames.contains('pendingFavorites')) {
+        db.createObjectStore('pendingFavorites', { keyPath: 'id' });
+      }
+      
+      if (!db.objectStoreNames.contains('pendingProfileUpdates')) {
+        db.createObjectStore('pendingProfileUpdates', { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function getPendingFavorites(db) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['pendingFavorites'], 'readonly');
+    const store = transaction.objectStore('pendingFavorites');
+    const request = store.getAll();
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+async function removePendingFavorite(db, id) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['pendingFavorites'], 'readwrite');
+    const store = transaction.objectStore('pendingFavorites');
+    const request = store.delete(id);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+async function getPendingProfileUpdates(db) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['pendingProfileUpdates'], 'readonly');
+    const store = transaction.objectStore('pendingProfileUpdates');
+    const request = store.getAll();
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+async function removePendingProfileUpdate(db, id) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['pendingProfileUpdates'], 'readwrite');
+    const store = transaction.objectStore('pendingProfileUpdates');
+    const request = store.delete(id);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+// Push notification handling
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    
+    const options = {
+      body: data.body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/badge-96x96.png',
+      data: data.data
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  } catch (error) {
+    console.error('Error showing push notification:', error);
+  }
+});
+
+// Notification click handling
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Check if there's already a window open
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
     })
   );
 });
