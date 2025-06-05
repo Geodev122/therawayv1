@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "deploy": "firebase deploy",
     "emulators": "firebase emulators:start",
-    "migrate": "node -r ts-node/register src/migration/migrateData.ts"
+    "migrate": "node -r ts-node/register src/migration/migrateData.ts",
+    "php-serve": "php -S localhost:8000 -t backend"
   },
   "dependencies": {
     "react": "^18.2.0",
