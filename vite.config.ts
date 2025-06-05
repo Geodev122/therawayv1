@@ -10,5 +10,10 @@ export default defineConfig({
     outDir: 'dist', // Output directory for production build
     sourcemap: false, // Disable source maps for production for slightly smaller build size
   },
-  publicDir: 'public' // Specifies the directory for static assets like locales
+  publicDir: 'public', // Specifies the directory for static assets like locales
+  server: {
+    proxy: {
+      '/backend': 'http://localhost:80' // Proxy API requests to PHP backend
+    }
+  }
 })
