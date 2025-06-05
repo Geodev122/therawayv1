@@ -1,10 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title id="splashTitle">TheraWay - Your Path to Wellness</title>
+    <title id="splashTitle">TheraWay - Your Path to Mental Wellness</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind CSS Configuration -->
     <script>
       tailwind.config = {
         theme: {
@@ -12,7 +16,7 @@
             colors: {
               primary: '#FAF8F5',    // Soft Warm Off-White
               secondary: '#EAE0D5',  // Muted Dusty Rose/Light Clay
-              accent: '#15686e',     // NEW Accent Color: Deep Teal
+              accent: '#15686e',     // Deep Teal
               'accent-dark': '#115054', // Darker shade for solid hover
               background: '#FDFBF8',  // Very Light Neutral Warm Grey
               textOnDark: '#FBFBF5',  // Creamy Off-White
@@ -23,7 +27,6 @@
         }
       }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
@@ -147,31 +150,33 @@
     <script>
         const splashScreenTexts = {
             en: {
-                splashTitle: "TheraWay - Find Your Clarity. Begin Your Journey.",
+                splashTitle: "TheraWay - Your Path to Mental Wellness",
                 theraText: "Thera", 
                 wayText: "Way",   
-                splashMainSubtitle: " Discover your path to growth with TheraWay.",
-                exploreTherapistsButton: "Find Support & Explore Therapists",
+                splashMainSubtitle: "Connect with compassionate therapists, discover supportive clinic spaces, and take the next step on your path to well-being.",
+                exploreTherapistsButton: "Find Support Now",
                 professionalsSectionTitle: "Are you a Professional?",
                 therapistCardTitle: "Therapists: Elevate Your Practice",
+                therapistCardHook: "Join our growing network of mental health professionals. Create your profile, connect with clients, and find ideal clinic spaces to practice.",
                 therapistPortalLink: "Therapist Portal",
                 clinicOwnerCardTitle: "Clinic Owners: Showcase Your Space",
+                clinicOwnerCardHook: "List your available clinic spaces and connect with therapists looking for professional environments. Manage your listings and grow your reach.",
                 clinicOwnerPortalLink: "Clinic Owner Portal",
                 languageToggle: "العربية",
                 copyrightText: "&copy; " + new Date().getFullYear() + " TheraWay. All rights reserved."
             },
             ar: {
-                splashTitle: "ثيرواي - جد صفاءك. ابدأ رحلتك.",
+                splashTitle: "ثيرواي - طريقك إلى العافية النفسية",
                 theraText: "ثير",
                 wayText: "واي",
-                splashMainSubtitle: "اكتشف طريقك نحو النمو مع ثيرواي.",
-                exploreTherapistsButton: "ابحث عن الدعم واستكشف المعالجين",
+                splashMainSubtitle: "تواصل مع معالجين متعاطفين، واكتشف مساحات عيادات داعمة، واتخذ الخطوة التالية في طريقك نحو الرفاهية.",
+                exploreTherapistsButton: "ابحث عن الدعم الآن",
                 professionalsSectionTitle: "هل أنت محترف؟",
                 therapistCardTitle: "للمعالجين: ارتقِ بممارستك",
-                therapistCardHook: "تواصل مع العملاء الباحثين عن خبرتك. اكتشف وأدر مواقع ممارسة مثالية بسلاسة.",
+                therapistCardHook: "انضم إلى شبكتنا المتنامية من المتخصصين في الصحة النفسية. أنشئ ملفك الشخصي، وتواصل مع العملاء، وابحث عن مساحات عيادات مثالية للممارسة.",
                 therapistPortalLink: "بوابة المعالجين",
                 clinicOwnerCardTitle: "لأصحاب العيادات: اعرض مساحتك",
-                clinicOwnerCardHook: "أدرج مساحات عيادتك الاحترافية. اجذب المعالجين المؤهلين. بسّط إدارة إيجاراتك.",
+                clinicOwnerCardHook: "أدرج مساحات عيادتك المتاحة وتواصل مع المعالجين الباحثين عن بيئات احترافية. قم بإدارة قوائمك وزد من وصولك.",
                 clinicOwnerPortalLink: "بوابة أصحاب العيادات",
                 languageToggle: "English",
                 copyrightText: "&copy; " + new Date().getFullYear() + " ثيرواي. جميع الحقوق محفوظة."
