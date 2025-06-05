@@ -46,6 +46,12 @@ if (!function_exists('generateUniqueId')) {
  */
 if (!function_exists('getAuthenticatedUser')) {
     function getAuthenticatedUser(?string $jwtKey = null, array $allowedRoles = []): array {
+        // Check if JWT class exists before attempting to use it
+        if (!class_exists('Firebase\JWT\JWT')) {
+            error_log("Firebase JWT class not found. Check if dependencies are installed.");
+            sendJsonResponse(['status' => 'error', 'message' => 'Server authentication system unavailable.'], 500);
+        }
+
         $keyToUse = $jwtKey ?? (defined('JWT_SECRET_KEY') ? JWT_SECRET_KEY : null);
         if (!$keyToUse) {
             error_log("JWT_SECRET_KEY not available in getAuthenticatedUser");
@@ -56,6 +62,12 @@ if (!function_exists('getAuthenticatedUser')) {
             sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
         }
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        
+        // Check if Authorization header is properly formatted
+        if (!str_contains($authHeader, ' ')) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid Authorization header format.'], 401);
+        }
+        
         list($type, $token) = explode(' ', $authHeader, 2);
 
         if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {
@@ -91,7 +103,6 @@ if (!function_exists('getAuthenticatedUser')) {
     }
 }
 
-
 /**
  * Authenticates an ADMIN user from JWT.
  * Wrapper around getAuthenticatedUser for admin-specific checks.
@@ -124,7 +135,6 @@ if (!function_exists('getClinicIdForOwner')) {
         }
     }
 }
-
 
 /**
  * Fetches the full therapist profile details.
