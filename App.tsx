@@ -136,7 +136,7 @@ const AppContent: React.FC = () => {
                 authLoading ? <LoadingFallback /> : 
                 isAuthenticated ? (
                   user?.role === UserRole.THERAPIST ? <Navigate to="/dashboard/therapist\" replace /> :
-                  user?.role === UserRole.CLINIC_OWNER ? <Navigate to="/dashboard/clinic" replace /> :
+                  user?.role === UserRole.CLINIC_OWNER ? <Navigate to="/dashboard/clinic\" replace /> :
                   user?.role === UserRole.ADMIN ? <Navigate to="/dashboard/admin" replace /> :
                   user?.role === UserRole.CLIENT ? <Navigate to="/dashboard/client/profile" replace /> :
                   <Navigate to="/" replace /> 
