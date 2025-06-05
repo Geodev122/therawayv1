@@ -40,6 +40,9 @@ try { // Global try-catch block to handle any unhandled errors
             sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
         }
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        if (!str_contains($authHeader, ' ')) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid Authorization header format.'], 401);
+        }
         list($type, $token) = explode(' ', $authHeader, 2);
 
         if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {
@@ -249,7 +252,7 @@ try { // Global try-catch block to handle any unhandled errors
         $therapistUserId = trim($input['id']);
         $newStatus = isset($input['status']) ? trim($input['status']) : null;
         $adminNotes = isset($input['adminNotes']) ? trim($input['adminNotes']) : null; // Allow empty string to clear notes
-        $isOverallVerifiedInput = $input['isOverallVerified'] ?? null; // Boolean expected
+        $isOverallVerifiedInput = $input['isVerified'] ?? null; // Boolean expected
 
         if (empty($therapistUserId)) {
             sendJsonResponse(['status' => 'error', 'message' => 'Therapist user ID is required.'], 400);
@@ -361,10 +364,10 @@ try { // Global try-catch block to handle any unhandled errors
     else {
         sendJsonResponse(['status' => 'error', 'message' => 'Invalid request method for admin/therapists.'], 405);
     }
-
 } catch (Throwable $e) {
     // Log the error and send a clean JSON response
     error_log("Unhandled error in admin_therapists.php: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
     sendJsonResponse(['status' => 'error', 'message' => 'An unexpected error occurred.'], 500);
 }
+?>

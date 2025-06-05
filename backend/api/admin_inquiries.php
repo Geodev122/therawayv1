@@ -40,6 +40,9 @@ try { // Global try-catch block to handle any unhandled errors
             sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
         }
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        if (!str_contains($authHeader, ' ')) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid Authorization header format.'], 401);
+        }
         list($type, $token) = explode(' ', $authHeader, 2);
 
         if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {

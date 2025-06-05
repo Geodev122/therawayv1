@@ -36,7 +36,7 @@ date_default_timezone_set('UTC'); // Example: 'Asia/Dubai', 'America/New_York'
 // This key should ideally be loaded from an environment variable and NOT hardcoded directly
 // in version control for production systems.
 if (!defined('JWT_SECRET_KEY')) {
-    define('JWT_SECRET_KEY', 'YOUR_VERY_STRONG_SECRET_RANDOM_KEY_GOES_HERE_REPLACE_ME_NOW');
+    define('JWT_SECRET_KEY', 'theraway_jwt_secret_key_for_development_only_replace_in_production');
 }
 if (!defined('JWT_ISSUER')) {
     define('JWT_ISSUER', 'theraway.net'); // The issuer of the token (your domain)

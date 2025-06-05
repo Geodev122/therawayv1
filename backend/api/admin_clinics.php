@@ -10,7 +10,6 @@ try { // Global try-catch block to handle any unhandled errors
     require_once __DIR__ . '/../config/core.php';
     require_once __DIR__ . '/../config/db.php'; // Provides $pdo
     require_once __DIR__ . '/../vendor/autoload.php'; // Composer autoloader
-    require_once __DIR__ . '/../core/helpers.php'; // For authenticateAdmin helper
 
     use Firebase\JWT\JWT;
     use Firebase\JWT\Key;
@@ -28,6 +27,45 @@ try { // Global try-catch block to handle any unhandled errors
     if (!$jwtKey) {
         error_log("JWT_SECRET_KEY is not defined in core.php for admin_clinics.php");
         sendJsonResponse(['status' => 'error', 'message' => 'Server configuration error (JWT).'], 500);
+    }
+
+    /**
+     * Authenticates an admin user from JWT.
+     * Sends error response and exits if authentication fails.
+     * @param string $jwtKey The JWT secret key.
+     * @return array Decoded JWT payload containing user data (including admin's userId and name).
+     */
+    function authenticateAdmin(string $jwtKey): array {
+        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Authorization header missing.'], 401);
+        }
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        if (!str_contains($authHeader, ' ')) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid Authorization header format.'], 401);
+        }
+        list($type, $token) = explode(' ', $authHeader, 2);
+
+        if (strcasecmp($type, 'Bearer') !== 0 || empty($token)) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token type or token is empty.'], 401);
+        }
+
+        try {
+            $decoded = JWT::decode($token, new Key($jwtKey, 'HS256'));
+            if (!isset($decoded->data) || !isset($decoded->data->role) || $decoded->data->role !== 'ADMIN' || !isset($decoded->data->userId)) {
+                sendJsonResponse(['status' => 'error', 'message' => 'Access denied. Admin role required.'], 403);
+            }
+            $adminName = isset($decoded->data->name) ? $decoded->data->name : 'Admin User';
+            return ['userId' => $decoded->data->userId, 'role' => $decoded->data->role, 'name' => $adminName];
+        } catch (ExpiredException $e) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Token has expired.'], 401);
+        } catch (SignatureInvalidException $e) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Token signature invalid.'], 401);
+        } catch (BeforeValidException $e) {
+            sendJsonResponse(['status' => 'error', 'message' => 'Token not yet valid.'], 401);
+        } catch (Exception $e) {
+            error_log("JWT Decode Error for admin_clinics: " . $e->getMessage());
+            sendJsonResponse(['status' => 'error', 'message' => 'Invalid token: ' . $e->getMessage()], 401);
+        }
     }
 
     /**
@@ -99,9 +137,10 @@ try { // Global try-catch block to handle any unhandled errors
         return $clinic;
     }
 
+
     // --- Handle GET Request: Fetch list of clinics ---
     if ($method === 'GET') {
-        $adminData = authenticateAdmin($jwtKey); // Using global helper function
+        $adminData = authenticateAdmin($jwtKey);
 
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 20;
