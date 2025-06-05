@@ -21,12 +21,17 @@ const firestore = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
 
-// Connect to emulators in development
-if (import.meta.env.DEV) {
-  connectAuthEmulator(auth, 'http://localhost:9099');
-  connectFirestoreEmulator(firestore, 'localhost', 8080);
-  connectFunctionsEmulator(functions, 'localhost', 5001);
-  connectStorageEmulator(storage, 'localhost', 9199);
+// Connect to emulators in development, but not in StackBlitz
+if (import.meta.env.DEV && !window.location.hostname.includes('stackblitz')) {
+  try {
+    connectAuthEmulator(auth, 'http://localhost:9099');
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    connectStorageEmulator(storage, 'localhost', 9199);
+    console.log('Connected to Firebase emulators');
+  } catch (error) {
+    console.warn('Failed to connect to Firebase emulators:', error);
+  }
 }
 
 export { app, auth, firestore, functions, storage };

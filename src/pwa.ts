@@ -1,5 +1,11 @@
 // Service worker registration
 export function registerServiceWorker() {
+  // Skip service worker registration in StackBlitz environment
+  if (window.location.hostname.includes('stackblitz')) {
+    console.log('Service Worker registration skipped in StackBlitz environment');
+    return;
+  }
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
