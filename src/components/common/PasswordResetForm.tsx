@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTranslation } from '../../hooks/useTranslation';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { Button } from './Button';
 import { InputField } from '../dashboard/shared/FormElements';
 
@@ -69,7 +69,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onSuccess,
       
       <div className="flex justify-end space-x-3 pt-2">
         {onCancel && (
-          <Button variant="light" onClick={onCancel} disabled={authLoading}>
+          <Button variant="light\" onClick={onCancel} disabled={authLoading}>
             {t('cancel', { default: 'Cancel' })}
           </Button>
         )}
