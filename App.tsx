@@ -6,7 +6,7 @@ import { FirebaseProvider } from './contexts/FirebaseContext';
 import { useTranslation } from './hooks/useTranslation';
 import { Navbar } from './components/Navbar';
 import { LoginPromptModal } from './components/auth/LoginPromptModal';
-import { OfflineNotification } from './components/common/OfflineNotification';
+import { OfflineNotification } from './src/components/common/OfflineNotification';
 import { InstallPrompt } from './components/common/InstallPrompt';
 import { UserRole } from './types';
 import { registerServiceWorker, setupOfflineDetection } from './src/pwa';
