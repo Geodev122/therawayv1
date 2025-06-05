@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { FirebaseProvider } from './contexts/FirebaseContext';
 import { useTranslation } from './hooks/useTranslation';
 import { Navbar } from './components/Navbar';
 import { LoginPromptModal } from './components/auth/LoginPromptModal';
@@ -137,13 +138,15 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <LanguageProvider> 
-        <HashRouter>
-          <AppContent />
-        </HashRouter>
-      </LanguageProvider>
-    </AuthProvider>
+    <FirebaseProvider>
+      <AuthProvider>
+        <LanguageProvider> 
+          <HashRouter>
+            <AppContent />
+          </HashRouter>
+        </LanguageProvider>
+      </AuthProvider>
+    </FirebaseProvider>
   );
 };
 

@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { DEFAULT_USER_ROLE, API_BASE_URL } from '../constants';
+import { DEFAULT_USER_ROLE } from '../constants';
+import { useFirebase } from './FirebaseContext';
+import { signIn, signUp as firebaseSignUp, signOutUser } from '../src/firebase/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { firebaseUser, appUser, loading: firebaseLoading } = useFirebase();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -28,163 +31,98 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoginPromptVisible, setIsLoginPromptVisible] = useState(false);
   const [actionAttempted, setActionAttempted] = useState<string | null>(null);
 
+  // Update auth context when Firebase user changes
   useEffect(() => {
-    setAuthLoading(true);
-    try {
-      const storedUser = localStorage.getItem('theraWayUser');
-      const storedToken = localStorage.getItem('theraWayToken');
-      if (storedUser && storedToken) {
-        const parsedUser: User = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setToken(storedToken);
-      }
-    } catch (error) {
-      console.error("Failed to parse stored user/token:", error);
-      localStorage.removeItem('theraWayUser');
-      localStorage.removeItem('theraWayToken');
+    setAuthLoading(firebaseLoading);
+    
+    if (appUser && firebaseUser) {
+      setUser(appUser);
+      firebaseUser.getIdToken().then(idToken => {
+        setToken(idToken);
+      });
+    } else {
+      setUser(null);
+      setToken(null);
     }
-    setAuthLoading(false);
-  }, []);
+  }, [firebaseUser, appUser, firebaseLoading]);
 
   const isAuthenticated = !!user && !!token;
 
   const updateUserAuthContext = useCallback((updatedUserData: Partial<User>) => {
     setUser(prevUser => {
-        if (!prevUser) return null;
-        const newUser = { ...prevUser, ...updatedUserData };
-        localStorage.setItem('theraWayUser', JSON.stringify(newUser));
-        return newUser;
+      if (!prevUser) return null;
+      return { ...prevUser, ...updatedUserData };
     });
   }, []);
 
-
   const login = useCallback(async (email: string, password?: string) => {
-    setAuthLoading(true);
-    setAuthError(null);
-
-    // --- CRITICAL SECURITY WARNING ---
-    // The following 'if' block provides a backdoor login for development purposes.
-    // This MUST BE REMOVED or properly secured (e.g., via environment variables
-    // checked ONLY in a development build) before deploying to a live/production environment.
-    // Exposing this in production is a SEVERE security risk.
-    if (email === 'geo.elnajjar@gmail.com' && password === '123456') {
-      const adminUser: User = {
-        id: 'admin-geo-001',
-        email: 'geo.elnajjar@gmail.com',
-        role: UserRole.ADMIN,
-        name: 'Geo Admin',
-        profilePictureUrl: null, // Or a placeholder image URL
-      };
-      const adminToken = 'mock-admin-jwt-token-for-geo';
-      localStorage.setItem('theraWayUser', JSON.stringify(adminUser));
-      localStorage.setItem('theraWayToken', adminToken);
-      setUser(adminUser);
-      setToken(adminToken);
-      setIsLoginPromptVisible(false);
-      setActionAttempted(null);
-      setAuthLoading(false);
-      console.warn("CRITICAL WARNING: Logged in as Dev Admin (geo.elnajjar@gmail.com) via development backdoor. REMOVE FOR PRODUCTION.");
+    if (!password) {
+      setAuthError("Password is required for login.");
       return;
     }
-    // --- END OF CRITICAL SECURITY WARNING ---
-    
-    if (!password) {
-        setAuthError("Password is required for login.");
-        setAuthLoading(false);
-        return;
-    }
+
+    setAuthLoading(true);
+    setAuthError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', email, password }),
-      });
+      const userData = await signIn(email, password);
+      setUser(userData);
       
-      // Check if response is OK before trying to parse JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
       }
       
-      const data = await response.json();
-
-      if (data.status === 'success' && data.token && data.user) {
-        localStorage.setItem('theraWayUser', JSON.stringify(data.user));
-        localStorage.setItem('theraWayToken', data.token);
-        setUser(data.user);
-        setToken(data.token);
-        setIsLoginPromptVisible(false);
-        setActionAttempted(null);
-      } else {
-        setAuthError(data.message || "Login failed. Please check your credentials.");
-        localStorage.removeItem('theraWayUser');
-        localStorage.removeItem('theraWayToken');
-        setUser(null);
-        setToken(null);
-      }
+      setIsLoginPromptVisible(false);
+      setActionAttempted(null);
     } catch (error: any) {
-      console.error("Login API error:", error);
-      setAuthError("An error occurred during login. Please try again.");
-      localStorage.removeItem('theraWayUser');
-      localStorage.removeItem('theraWayToken');
+      console.error("Login error:", error);
+      setAuthError(error.message || "An error occurred during login. Please try again.");
       setUser(null);
       setToken(null);
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthLoading(false);
-  }, []);
+  }, [firebaseUser]);
 
   const signup = useCallback(async (name: string, email: string, password?: string, role: UserRole = DEFAULT_USER_ROLE) => {
+    if (!password) {
+      setAuthError("Password is required for signup.");
+      return;
+    }
+
     setAuthLoading(true);
     setAuthError(null);
     
-    if (!password) {
-        setAuthError("Password is required for signup.");
-        setAuthLoading(false);
-        return;
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/auth.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signup', name, email, password, role }),
-      });
+      const userData = await firebaseSignUp(name, email, password, role);
+      setUser(userData);
       
-      // Check if response is OK before trying to parse JSON
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
       }
       
-      const data = await response.json();
-
-      if (data.status === 'success' && data.token && data.user) {
-        localStorage.setItem('theraWayUser', JSON.stringify(data.user));
-        localStorage.setItem('theraWayToken', data.token);
-        setUser(data.user);
-        setToken(data.token);
-        setIsLoginPromptVisible(false);
-        setActionAttempted(null);
-      } else {
-        setAuthError(data.message || "Signup failed. Please try again.");
-      }
+      setIsLoginPromptVisible(false);
+      setActionAttempted(null);
     } catch (error: any) {
-      console.error("Signup API error:", error);
-      setAuthError("An error occurred during signup. Please try again.");
+      console.error("Signup error:", error);
+      setAuthError(error.message || "An error occurred during signup. Please try again.");
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthLoading(false);
-  }, []);
+  }, [firebaseUser]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('theraWayUser');
-    localStorage.removeItem('theraWayToken');
-    setUser(null);
-    setToken(null);
-    setIsLoginPromptVisible(false);
-    setActionAttempted(null);
-    setAuthError(null);
-    // TODO: Optionally, call a backend endpoint to invalidate the token
+    signOutUser().then(() => {
+      setUser(null);
+      setToken(null);
+      setIsLoginPromptVisible(false);
+      setActionAttempted(null);
+      setAuthError(null);
+    }).catch(error => {
+      console.error("Logout error:", error);
+    });
   }, []);
 
   const promptLogin = useCallback((action?: string) => {
@@ -199,19 +137,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{
-        user,
-        token,
-        isAuthenticated,
-        login,
-        signup,
-        logout,
-        updateUserAuthContext,
-        authLoading,
-        authError,
-        promptLogin,
-        isLoginPromptVisible,
-        closeLoginPrompt,
-        actionAttempted
+      user,
+      token,
+      isAuthenticated,
+      login,
+      signup,
+      logout,
+      updateUserAuthContext,
+      authLoading,
+      authError,
+      promptLogin,
+      isLoginPromptVisible,
+      closeLoginPrompt,
+      actionAttempted
     }}>
       {children}
     </AuthContext.Provider>
