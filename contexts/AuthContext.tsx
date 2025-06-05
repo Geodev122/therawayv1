@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { DEFAULT_USER_ROLE, API_BASE_URL } from '../constants';
@@ -101,6 +100,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', email, password }),
       });
+      
+      // Check if response is OK before trying to parse JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+      
       const data = await response.json();
 
       if (data.status === 'success' && data.token && data.user) {
@@ -117,9 +123,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
         setToken(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login API error:", error);
       setAuthError("An error occurred during login. Please try again.");
+      localStorage.removeItem('theraWayUser');
+      localStorage.removeItem('theraWayToken');
+      setUser(null);
+      setToken(null);
     }
     setAuthLoading(false);
   }, []);
@@ -140,6 +150,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'signup', name, email, password, role }),
       });
+      
+      // Check if response is OK before trying to parse JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+      
       const data = await response.json();
 
       if (data.status === 'success' && data.token && data.user) {
@@ -152,7 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         setAuthError(data.message || "Signup failed. Please try again.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup API error:", error);
       setAuthError("An error occurred during signup. Please try again.");
     }

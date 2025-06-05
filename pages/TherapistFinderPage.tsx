@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Therapist, UserRole } from '../types';
 import { API_BASE_URL, APP_NAME, AVAILABILITY_OPTIONS, SPECIALIZATIONS_LIST, LANGUAGES_LIST } from '../constants'; 
@@ -164,14 +163,19 @@ export const TherapistFinderPage: React.FC = () => {
         setFavorites(new Set()); // Clear favorites if not authenticated
         return;
     }
-    // TODO: Implement actual API call
     try {
         const response = await fetch(`${API_BASE_URL}/client_favorites.php`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        if (data.status === 'success' && Array.isArray(data.favorites)) {
-            setFavorites(new Set(data.favorites));
+        
+        if (data.status === 'success' && Array.isArray(data.data)) {
+            setFavorites(new Set(data.data));
         } else {
             console.error("Failed to fetch favorites:", data.message);
             setFavorites(new Set());
@@ -268,7 +272,13 @@ export const TherapistFinderPage: React.FC = () => {
             },
             body: JSON.stringify({ therapistId })
         });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        
         if (data.status !== 'success') {
             // Revert optimistic update on failure
             setFavorites(prevFavorites => {
@@ -501,7 +511,7 @@ export const TherapistFinderPage: React.FC = () => {
 
       {viewMode === 'swipe' && currentTherapistForSwipe && (
         <div 
-            className="fixed left-0 right-0 bg-background/90 backdrop-blur-md shadow-md px-3 flex flex-col items-center justify-center"
+            className="fixed left-0 right-0 bg-primary shadow-md px-3 flex flex-col items-center justify-center"
             style={{ 
                 bottom: `${BOTTOM_NAV_HEIGHT_PX}px`, 
                 height: `${ACTION_BUTTONS_SWIPE_AREA_HEIGHT_PX}px`, 
@@ -539,7 +549,7 @@ export const TherapistFinderPage: React.FC = () => {
       )}
 
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-background/70 backdrop-blur-md border-t border-accent/20 shadow-top-lg z-[1000] flex justify-around items-center"
+        className="fixed bottom-0 left-0 right-0 bg-primary border-t border-accent/20 shadow-top-lg z-[1000] flex justify-around items-center"
         style={{height: `${BOTTOM_NAV_HEIGHT_PX}px`}}
         role="navigation"
         aria-label={t('mainNavigation', { default: 'Main Navigation' })}
@@ -550,7 +560,7 @@ export const TherapistFinderPage: React.FC = () => {
               variant={filterButtonActive ? 'primary' : 'ghost'}
               size="sm" 
               className={`${navButtonBaseClasses} relative 
-                         ${filterButtonActive ? 'shadow-[0_0_10px_rgba(21,104,110,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
+                         ${filterButtonActive ? 'shadow-[0_0_10px_rgba(4,83,88,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
               aria-label={numActiveFilters > 0 ? t('filterActiveAction', { count: numActiveFilters }) : t('filterAction')}
               aria-pressed={isFilterModalOpen}
           >
@@ -568,7 +578,7 @@ export const TherapistFinderPage: React.FC = () => {
               variant={viewMode === 'swipe' ? 'primary' : 'ghost'}
               size="sm"
               className={`${navButtonBaseClasses} 
-                         ${viewMode === 'swipe' ? 'shadow-[0_0_10px_rgba(21,104,110,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
+                         ${viewMode === 'swipe' ? 'shadow-[0_0_10px_rgba(4,83,88,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
               aria-label={t('viewModeSwipe')}
               aria-pressed={viewMode === 'swipe'}
           >
@@ -581,7 +591,7 @@ export const TherapistFinderPage: React.FC = () => {
               variant={viewMode === 'grid' ? 'primary' : 'ghost'}
               size="sm"
               className={`${navButtonBaseClasses} 
-                         ${viewMode === 'grid' ? 'shadow-[0_0_10px_rgba(21,104,110,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
+                         ${viewMode === 'grid' ? 'shadow-[0_0_10px_rgba(4,83,88,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
               aria-label={t('viewModeGrid')}
               aria-pressed={viewMode === 'grid'}
           >
@@ -594,7 +604,7 @@ export const TherapistFinderPage: React.FC = () => {
               variant={viewMode === 'map' ? 'primary' : 'ghost'}
               size="sm"
               className={`${navButtonBaseClasses} 
-                         ${viewMode === 'map' ? 'shadow-[0_0_10px_rgba(21,104,110,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
+                         ${viewMode === 'map' ? 'shadow-[0_0_10px_rgba(4,83,88,0.35)] scale-105' : 'text-textOnLight/70 hover:!text-accent hover:scale-105'}`}
               aria-label={t('viewModeMap')}
               aria-pressed={viewMode === 'map'}
           >

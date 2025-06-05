@@ -91,7 +91,7 @@ export const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="bg-background backdrop-md shadow-lg sticky top-0 z-100 border-b border-accent/20">
+    <nav className="bg-primary shadow-lg sticky top-0 z-100 border-b border-accent/20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -175,7 +175,7 @@ export const Navbar: React.FC = () => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="bg-card backdrop-blur-md shadow-nav sticky top-0 z-1000 pb-3 w-full border-b border-border-subtle">
+        <div className="bg-primary shadow-nav sticky top-0 z-1000 pb-3 w-full border-b border-border-subtle">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {renderLinks(true)}
           </div>
