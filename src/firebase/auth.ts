@@ -8,13 +8,17 @@ import {
   sendPasswordResetEmail,
   updatePassword,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+  getAdditionalUserInfo
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from './config';
-import { User, UserRole } from '../../types';
+import { User, UserRole } from '../types';
 
-// Sign up a new user
+// Sign up a new user with email/password
 export const signUp = async (
   name: string, 
   email: string, 
@@ -45,44 +49,39 @@ export const signUp = async (
     // Create role-specific data
     if (role === UserRole.THERAPIST) {
       await setDoc(doc(firestore, 'therapists_data', firebaseUser.uid), {
-        id: firebaseUser.uid,
-        name,
-        email,
-        accountStatus: 'draft',
+        user_id: firebaseUser.uid,
+        account_status: 'draft',
         bio: '',
         specializations: [],
         languages: [],
         qualifications: [],
         locations: [],
         rating: 0,
-        reviewCount: 0,
-        profileViews: 0,
+        review_count: 0,
+        profile_views: 0,
         likes_count: 0,
-        whatsappNumber: '',
-        isVerified: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        whatsapp_number: '',
+        is_overall_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     } else if (role === UserRole.CLINIC_OWNER) {
       const clinicId = `clinic_${firebaseUser.uid}`;
       await setDoc(doc(firestore, 'clinics_data', clinicId), {
-        id: clinicId,
-        ownerId: firebaseUser.uid,
-        name: `${name}'s Clinic`,
-        accountStatus: 'draft',
+        user_id: firebaseUser.uid,
+        clinic_id: clinicId,
+        clinic_name: `${name}'s Clinic`,
+        account_status: 'draft',
         description: '',
         address: '',
-        whatsappNumber: '',
+        whatsapp_number: '',
         amenities: [],
-        operatingHours: {},
+        operating_hours: {},
         services: [],
-        photos: [],
-        isVerified: false,
-        theraWayMembership: {
-          status: 'none'
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        clinic_photos: [],
+        is_verified_by_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     }
     
@@ -93,23 +92,171 @@ export const signUp = async (
   }
 };
 
-// Sign in an existing user
+// Sign in with email/password
 export const signIn = async (email: string, password: string): Promise<User> => {
   try {
     const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     
     // Get user data from Firestore
-    const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
-    
-    if (!userDoc.exists()) {
-      throw new Error('User data not found');
-    }
-    
-    return userDoc.data() as User;
+    return await getCurrentUser(firebaseUser);
   } catch (error: any) {
     console.error('Error signing in:', error);
     throw new Error(error.message || 'Failed to sign in');
+  }
+};
+
+// Sign in with Google
+export const signInWithGoogle = async (defaultRole: UserRole = UserRole.CLIENT): Promise<User> => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const firebaseUser = userCredential.user;
+    const isNewUser = getAdditionalUserInfo(userCredential)?.isNewUser;
+    
+    // Check if user exists in Firestore
+    const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
+    
+    if (!userDoc.exists() || isNewUser) {
+      // Create new user document
+      const newUser: User = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || 'User',
+        email: firebaseUser.email || '',
+        role: defaultRole,
+        profilePictureUrl: firebaseUser.photoURL || null
+      };
+      
+      await setDoc(doc(firestore, 'users', firebaseUser.uid), {
+        ...newUser,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Create role-specific data
+      if (defaultRole === UserRole.THERAPIST) {
+        await setDoc(doc(firestore, 'therapists_data', firebaseUser.uid), {
+          user_id: firebaseUser.uid,
+          account_status: 'draft',
+          bio: '',
+          specializations: [],
+          languages: [],
+          qualifications: [],
+          locations: [],
+          rating: 0,
+          review_count: 0,
+          profile_views: 0,
+          likes_count: 0,
+          whatsapp_number: '',
+          is_overall_verified: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      } else if (defaultRole === UserRole.CLINIC_OWNER) {
+        const clinicId = `clinic_${firebaseUser.uid}`;
+        await setDoc(doc(firestore, 'clinics_data', clinicId), {
+          user_id: firebaseUser.uid,
+          clinic_id: clinicId,
+          clinic_name: `${firebaseUser.displayName || 'New'}'s Clinic`,
+          account_status: 'draft',
+          description: '',
+          address: '',
+          whatsapp_number: '',
+          amenities: [],
+          operating_hours: {},
+          services: [],
+          clinic_photos: [],
+          is_verified_by_admin: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
+      
+      return newUser;
+    }
+    
+    // Return existing user data
+    return await getCurrentUser(firebaseUser);
+  } catch (error: any) {
+    console.error('Error signing in with Google:', error);
+    throw new Error(error.message || 'Failed to sign in with Google');
+  }
+};
+
+// Sign in with Facebook
+export const signInWithFacebook = async (defaultRole: UserRole = UserRole.CLIENT): Promise<User> => {
+  try {
+    const provider = new FacebookAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const firebaseUser = userCredential.user;
+    const isNewUser = getAdditionalUserInfo(userCredential)?.isNewUser;
+    
+    // Check if user exists in Firestore
+    const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
+    
+    if (!userDoc.exists() || isNewUser) {
+      // Create new user document
+      const newUser: User = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || 'User',
+        email: firebaseUser.email || '',
+        role: defaultRole,
+        profilePictureUrl: firebaseUser.photoURL || null
+      };
+      
+      await setDoc(doc(firestore, 'users', firebaseUser.uid), {
+        ...newUser,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Create role-specific data
+      if (defaultRole === UserRole.THERAPIST) {
+        await setDoc(doc(firestore, 'therapists_data', firebaseUser.uid), {
+          user_id: firebaseUser.uid,
+          account_status: 'draft',
+          bio: '',
+          specializations: [],
+          languages: [],
+          qualifications: [],
+          locations: [],
+          rating: 0,
+          review_count: 0,
+          profile_views: 0,
+          likes_count: 0,
+          whatsapp_number: '',
+          is_overall_verified: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      } else if (defaultRole === UserRole.CLINIC_OWNER) {
+        const clinicId = `clinic_${firebaseUser.uid}`;
+        await setDoc(doc(firestore, 'clinics_data', clinicId), {
+          user_id: firebaseUser.uid,
+          clinic_id: clinicId,
+          clinic_name: `${firebaseUser.displayName || 'New'}'s Clinic`,
+          account_status: 'draft',
+          description: '',
+          address: '',
+          whatsapp_number: '',
+          amenities: [],
+          operating_hours: {},
+          services: [],
+          clinic_photos: [],
+          is_verified_by_admin: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
+      
+      return newUser;
+    }
+    
+    // Return existing user data
+    return await getCurrentUser(firebaseUser);
+  } catch (error: any) {
+    console.error('Error signing in with Facebook:', error);
+    throw new Error(error.message || 'Failed to sign in with Facebook');
   }
 };
 
@@ -124,18 +271,33 @@ export const signOutUser = async (): Promise<void> => {
 };
 
 // Get current user data from Firestore
-export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User | null> => {
+export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User> => {
   try {
     const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
     
     if (!userDoc.exists()) {
-      return null;
+      // If user document doesn't exist in Firestore, create a basic one
+      const newUser: User = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || 'User',
+        email: firebaseUser.email || '',
+        role: UserRole.CLIENT, // Default role
+        profilePictureUrl: firebaseUser.photoURL || null
+      };
+      
+      await setDoc(doc(firestore, 'users', firebaseUser.uid), {
+        ...newUser,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      
+      return newUser;
     }
     
     return userDoc.data() as User;
   } catch (error: any) {
     console.error('Error getting current user:', error);
-    return null;
+    throw new Error(error.message || 'Failed to get user data');
   }
 };
 

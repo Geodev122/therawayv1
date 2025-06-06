@@ -2,14 +2,24 @@ import React, { createContext, useState, useContext, ReactNode, useCallback, use
 import { User, UserRole } from '../types';
 import { DEFAULT_USER_ROLE } from '../constants';
 import { useFirebase } from './FirebaseContext';
-import { signIn, signUp as firebaseSignUp, signOutUser } from '../src/firebase/auth';
+import { 
+  signIn, 
+  signUp, 
+  signOutUser, 
+  resetPassword, 
+  changePassword, 
+  signInWithGoogle, 
+  signInWithFacebook 
+} from '../src/firebase/auth';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password?: string) => Promise<void>;
-  signup: (name: string, email: string, password?: string, role?: UserRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role?: UserRole) => Promise<void>;
+  loginWithGoogle: (role?: UserRole) => Promise<void>;
+  loginWithFacebook: (role?: UserRole) => Promise<void>;
   logout: () => void;
   updateUserAuthContext: (updatedUserData: Partial<User>) => void;
   authLoading: boolean;
@@ -18,6 +28,8 @@ interface AuthContextType {
   isLoginPromptVisible: boolean;
   closeLoginPrompt: () => void;
   actionAttempted: string | null;
+  resetUserPassword: (email: string) => Promise<void>;
+  changeUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,12 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
-  const login = useCallback(async (email: string, password?: string) => {
-    if (!password) {
-      setAuthError("Password is required for login.");
-      return;
-    }
-
+  const login = useCallback(async (email: string, password: string) => {
     setAuthLoading(true);
     setAuthError(null);
 
@@ -85,17 +92,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [firebaseUser]);
 
-  const signup = useCallback(async (name: string, email: string, password?: string, role: UserRole = DEFAULT_USER_ROLE) => {
-    if (!password) {
-      setAuthError("Password is required for signup.");
-      return;
-    }
-
+  const loginWithGoogle = useCallback(async (role: UserRole = DEFAULT_USER_ROLE) => {
     setAuthLoading(true);
     setAuthError(null);
     
     try {
-      const userData = await firebaseSignUp(name, email, password, role);
+      const userData = await signInWithGoogle(role);
+      setUser(userData);
+      
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken(true); // Force refresh token
+        setToken(idToken);
+      }
+      
+      setIsLoginPromptVisible(false);
+      setActionAttempted(null);
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      setAuthError(error.message || "An error occurred during Google login. Please try again.");
+      setUser(null);
+      setToken(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [firebaseUser]);
+
+  const loginWithFacebook = useCallback(async (role: UserRole = DEFAULT_USER_ROLE) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    try {
+      const userData = await signInWithFacebook(role);
+      setUser(userData);
+      
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken(true); // Force refresh token
+        setToken(idToken);
+      }
+      
+      setIsLoginPromptVisible(false);
+      setActionAttempted(null);
+    } catch (error: any) {
+      console.error("Facebook login error:", error);
+      setAuthError(error.message || "An error occurred during Facebook login. Please try again.");
+      setUser(null);
+      setToken(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [firebaseUser]);
+
+  const signup = useCallback(async (name: string, email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    try {
+      const userData = await signUp(name, email, password, role);
       setUser(userData);
       
       if (firebaseUser) {
@@ -134,6 +186,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoginPromptVisible(false);
     setActionAttempted(null);
   }, []);
+  
+  const resetUserPassword = useCallback(async (email: string) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    try {
+      await resetPassword(email);
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      setAuthError(error.message || "An error occurred during password reset. Please try again.");
+      throw error;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+  
+  const changeUserPassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    
+    try {
+      await changePassword(currentPassword, newPassword);
+    } catch (error: any) {
+      console.error("Password change error:", error);
+      setAuthError(error.message || "An error occurred while changing password. Please try again.");
+      throw error;
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{
@@ -142,6 +224,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isAuthenticated,
       login,
       signup,
+      loginWithGoogle,
+      loginWithFacebook,
       logout,
       updateUserAuthContext,
       authLoading,
@@ -149,7 +233,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       promptLogin,
       isLoginPromptVisible,
       closeLoginPrompt,
-      actionAttempted
+      actionAttempted,
+      resetUserPassword,
+      changeUserPassword
     }}>
       {children}
     </AuthContext.Provider>

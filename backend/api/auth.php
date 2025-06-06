@@ -249,6 +249,147 @@ elseif ($action === 'login') {
     }
 }
 
+// --- Action: Social Login (Google/Facebook) ---
+elseif ($action === 'social_login') {
+    $provider = $input['provider'] ?? ''; // 'google' or 'facebook'
+    $idToken = $input['idToken'] ?? '';
+    $name = $input['name'] ?? '';
+    $email = filter_var($input['email'] ?? '', FILTER_SANITIZE_EMAIL);
+    $profilePictureUrl = $input['profilePictureUrl'] ?? null;
+    $role = $input['role'] ?? 'CLIENT';
+    
+    if (empty($provider) || empty($idToken) || empty($email)) {
+        sendJsonResponse(['status' => 'error', 'message' => 'Provider, ID token, and email are required for social login.'], 400);
+    }
+    
+    if (!in_array($provider, ['google', 'facebook'])) {
+        sendJsonResponse(['status' => 'error', 'message' => 'Invalid provider. Supported providers: google, facebook'], 400);
+    }
+    
+    try {
+        // Check if user already exists
+        $stmt = $pdo->prepare("SELECT id, name, email, role, profile_picture_url FROM users WHERE email = :email");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $pdo->beginTransaction();
+        
+        if (!$user) {
+            // User doesn't exist, create a new one
+            $userId = generateUniqueId('user_');
+            
+            $stmtInsert = $pdo->prepare("INSERT INTO users (id, name, email, password_hash, role, profile_picture_url, social_provider) 
+                                         VALUES (:id, :name, :email, :password_hash, :role, :profile_picture_url, :social_provider)");
+            
+            // Generate a random password hash (user won't use it for login)
+            $randomPassword = bin2hex(random_bytes(16));
+            $passwordHash = password_hash($randomPassword, PASSWORD_BCRYPT);
+            
+            $stmtInsert->bindParam(':id', $userId);
+            $stmtInsert->bindParam(':name', $name);
+            $stmtInsert->bindParam(':email', $email);
+            $stmtInsert->bindParam(':password_hash', $passwordHash);
+            $stmtInsert->bindParam(':role', $role);
+            $stmtInsert->bindParam(':profile_picture_url', $profilePictureUrl);
+            $stmtInsert->bindParam(':social_provider', $provider);
+            
+            if (!$stmtInsert->execute()) {
+                $pdo->rollBack();
+                error_log("Failed to insert user via social login for email: " . $email);
+                sendJsonResponse(['status' => 'error', 'message' => 'Registration failed. Please try again.'], 500);
+            }
+            
+            // Create role-specific data
+            if ($role === 'THERAPIST') {
+                $stmt_therapist = $pdo->prepare("INSERT INTO therapists_data (user_id, account_status) VALUES (:user_id, 'draft')");
+                $stmt_therapist->bindParam(':user_id', $userId);
+                if (!$stmt_therapist->execute()) {
+                    $pdo->rollBack();
+                    error_log("Failed to insert therapist_data for user ID: " . $userId);
+                    sendJsonResponse(['status' => 'error', 'message' => 'Registration failed (therapist data). Please try again.'], 500);
+                }
+            } elseif ($role === 'CLINIC_OWNER') {
+                $clinic_id_unique = generateUniqueId('clinic_');
+                $stmt_clinic = $pdo->prepare("INSERT INTO clinics_data (user_id, clinic_id, clinic_name, account_status) VALUES (:user_id, :clinic_id, :clinic_name, 'draft')");
+                $clinic_name_default = $name . "'s Clinic";
+                $stmt_clinic->bindParam(':user_id', $userId);
+                $stmt_clinic->bindParam(':clinic_id', $clinic_id_unique);
+                $stmt_clinic->bindParam(':clinic_name', $clinic_name_default);
+                if (!$stmt_clinic->execute()) {
+                    $pdo->rollBack();
+                    error_log("Failed to insert clinics_data for user ID: " . $userId);
+                    sendJsonResponse(['status' => 'error', 'message' => 'Registration failed (clinic data). Please try again.'], 500);
+                }
+            }
+            
+            $pdo->commit();
+            
+            // Set user data for JWT
+            $user = [
+                'id' => $userId,
+                'name' => $name,
+                'email' => $email,
+                'role' => $role,
+                'profile_picture_url' => $profilePictureUrl
+            ];
+        } else {
+            // User exists, update social provider if needed
+            $stmtUpdate = $pdo->prepare("UPDATE users SET social_provider = :social_provider WHERE id = :id");
+            $stmtUpdate->bindParam(':social_provider', $provider);
+            $stmtUpdate->bindParam(':id', $user['id']);
+            $stmtUpdate->execute();
+            
+            $pdo->commit();
+        }
+        
+        // Generate JWT Token
+        $issuedAt = time();
+        $expirationTime = $issuedAt + $jwtExpirationSeconds;
+        
+        $tokenPayload = [
+            'iss' => $jwtIssuer,
+            'aud' => $jwtAudience,
+            'iat' => $issuedAt,
+            'exp' => $expirationTime,
+            'data' => [
+                'userId' => $user['id'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+                'name' => $user['name']
+            ]
+        ];
+        
+        $jwt = JWT::encode($tokenPayload, $jwtKey, $jwtAlgorithm);
+        
+        sendJsonResponse([
+            'status' => 'success',
+            'message' => 'Social login successful.',
+            'token' => $jwt,
+            'user' => [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+                'profilePictureUrl' => $user['profile_picture_url'] ?? null
+            ]
+        ], 200);
+        
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Database error during social login for email {$email}: " . $e->getMessage());
+        sendJsonResponse(['status' => 'error', 'message' => 'A server error occurred during login. Please try again later.'], 500);
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("General error during social login for email {$email}: " . $e->getMessage());
+        sendJsonResponse(['status' => 'error', 'message' => 'An unexpected error occurred during login.'], 500);
+    }
+}
+
 // --- Unknown Action ---
 else {
     sendJsonResponse(['status' => 'error', 'message' => "Unknown action requested: '{$action}'."], 400);
